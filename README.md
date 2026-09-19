@@ -45,9 +45,11 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [從零學習路線](docs/learning/README.md)
 - [Step 1：定義商業問題與成功標準](docs/learning/step-01-business-problem.md)
 - [Step 2：認識 NYC Open Data 與原始資料](docs/learning/step-02-nyc-open-data.md)
+- [Step 3：理解 Git、repository 與專案目錄](docs/learning/step-03-git-and-repository.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Point-in-time source profile](docs/source_profile.md)
+- [Repository structure](docs/repository_structure.md)
 - [Fact grains and dimensional model](docs/data_model.md)
 - [Architecture decision records](docs/decisions/)
 - Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton

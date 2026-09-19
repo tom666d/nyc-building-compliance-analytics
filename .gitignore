@@ -4,11 +4,14 @@ __pycache__/
 *.pyc
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
+.DS_Store
 dbt/**/target/
 dbt/**/logs/
 dbt/**/dbt_packages/
 dbt/**/.user.yml
 airflow/logs/
 work/
+outputs/
 *.csv
 !.github/**/*.csv
