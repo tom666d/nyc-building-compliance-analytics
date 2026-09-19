@@ -42,6 +42,8 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 
 ## Phase 1 deliverables
 
+- [從零學習路線](docs/learning/README.md)
+- [Step 1：定義商業問題與成功標準](docs/learning/step-01-business-problem.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Fact grains and dimensional model](docs/data_model.md)
