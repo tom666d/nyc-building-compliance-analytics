@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: dob_raw
+    database: "{{ env_var('SNOWFLAKE_DATABASE', 'NYC_DOB_ANALYTICS') }}"
+    schema: raw
+    loaded_at_field: ingested_at
+    freshness:
+      warn_after: {count: 36, period: hour}
+      error_after: {count: 72, period: hour}
+    tables:
+      - name: permits
+        identifier: raw_dob_now_permits
+      - name: complaints
+        identifier: raw_dob_complaints
+      - name: violations
+        identifier: raw_dob_violations

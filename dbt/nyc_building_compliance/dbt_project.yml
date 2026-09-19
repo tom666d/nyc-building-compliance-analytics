@@ -1,0 +1,20 @@
+name: nyc_building_compliance
+version: 1.0.0
+config-version: 2
+profile: nyc_building_compliance
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  nyc_building_compliance:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts

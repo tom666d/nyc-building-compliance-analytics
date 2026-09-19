@@ -1,0 +1,16 @@
+version: 2
+
+exposures:
+  - name: building_compliance_360
+    type: dashboard
+    maturity: low
+    url: https://example.invalid/replace-with-bi-url
+    description: Planned executive and operations view of building compliance workload.
+    depends_on:
+      - ref('fct_building_compliance_daily')
+      - ref('fct_complaints')
+      - ref('fct_violations')
+      - ref('fct_permits')
+    owner:
+      name: Portfolio Owner
+      email: replace-me@example.com

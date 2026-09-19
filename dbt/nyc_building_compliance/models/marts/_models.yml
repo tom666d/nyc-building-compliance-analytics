@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: dim_buildings
+    description: One row per validated NYC Building Identification Number (BIN).
+    columns:
+      - name: building_key
+        description: Warehouse surrogate key derived from BIN.
+        tests: [not_null, unique]
+      - name: bin
+        description: Seven-digit NYC Building Identification Number.
+        tests: [not_null, unique]
+
+  - name: fct_permits
+    description: One row per DOB NOW work permit sequence.
+    columns:
+      - name: permit_key
+        tests: [not_null, unique]
+      - name: building_key
+        tests:
+          - relationships:
+              to: ref('dim_buildings')
+              field: building_key
+
+  - name: fct_complaints
+    description: One row per DOB complaint, using the latest ingested source state.
+    columns:
+      - name: complaint_key
+        tests: [not_null, unique]
+      - name: building_key
+        tests:
+          - relationships:
+              to: ref('dim_buildings')
+              field: building_key
+      - name: is_open
+        tests: [not_null]
+
+  - name: fct_violations
+    description: One row per legacy BIS DOB violation record.
+    columns:
+      - name: violation_key
+        tests: [not_null, unique]
+      - name: building_key
+        tests:
+          - relationships:
+              to: ref('dim_buildings')
+              field: building_key
+
+  - name: fct_building_compliance_daily
+    description: BI-ready current daily snapshot at building and snapshot-date grain.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [snapshot_date, building_key]
+    columns:
+      - name: snapshot_date
+        tests: [not_null]
+      - name: building_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_buildings')
+              field: building_key

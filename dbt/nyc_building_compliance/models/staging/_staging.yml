@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: stg_dob_now_permits
+    description: Latest source state for each DOB NOW permit sequence.
+    columns:
+      - name: permit_key
+        tests: [not_null, unique]
+      - name: bin
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "regexp_like(bin, '^[0-9]{7}$')"
+  - name: stg_dob_complaints
+    description: Latest source state for each DOB complaint.
+    columns:
+      - name: complaint_key
+        tests: [not_null, unique]
+  - name: stg_dob_violations
+    description: Latest source state for each legacy BIS DOB violation.
+    columns:
+      - name: violation_key
+        tests: [not_null, unique]
