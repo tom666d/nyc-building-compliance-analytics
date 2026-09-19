@@ -1,4 +1,4 @@
-.PHONY: install test lint ingest-sample dbt-deps dbt-parse dbt-build dbt-docs
+.PHONY: install test lint extract-samples ingest-sample dbt-deps dbt-parse dbt-build dbt-docs
 
 install:
 	python3 -m venv .venv
@@ -9,6 +9,11 @@ test:
 
 lint:
 	.venv/bin/ruff check src tests airflow
+
+extract-samples:
+	.venv/bin/nyc-dob-extract permits --limit 25
+	.venv/bin/nyc-dob-extract complaints --limit 25
+	.venv/bin/nyc-dob-extract violations --limit 25
 
 ingest-sample:
 	.venv/bin/nyc-dob-ingest --all --limit 1000

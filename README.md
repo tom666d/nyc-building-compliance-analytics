@@ -31,12 +31,14 @@ Airflow schedules ingestion + dbt; GitHub Actions validates every change.
 
 ## Quick start
 
-1. Copy `.env.example` to `.env` and enter a Snowflake service account.
-2. Create Snowflake objects with `infrastructure/snowflake/bootstrap.sql` as an administrator.
-3. Install the project: `make install`.
-4. Load a small real-data slice: `make ingest-sample`.
-5. Build and test: `make dbt-build`.
-6. Generate lineage and documentation: `make dbt-docs`.
+1. Install the project: `make install`.
+2. Download bounded real-data samples without Snowflake: `make extract-samples`.
+3. Inspect the JSON Lines files and manifests under `work/samples/`.
+4. Copy `.env.example` to `.env` and enter a Snowflake service account.
+5. Create Snowflake objects with `infrastructure/snowflake/bootstrap.sql` as an administrator.
+6. Load a small real-data slice: `make ingest-sample`.
+7. Build and test: `make dbt-build`.
+8. Generate lineage and documentation: `make dbt-docs`.
 
 The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. Production runs use the same code with date watermarks and pagination.
 
@@ -46,10 +48,12 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Step 1：定義商業問題與成功標準](docs/learning/step-01-business-problem.md)
 - [Step 2：認識 NYC Open Data 與原始資料](docs/learning/step-02-nyc-open-data.md)
 - [Step 3：理解 Git、repository 與專案目錄](docs/learning/step-03-git-and-repository.md)
+- [Step 4：用 Python 取得第一批真實資料](docs/learning/step-04-python-extraction.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Point-in-time source profile](docs/source_profile.md)
 - [Repository structure](docs/repository_structure.md)
+- [Local source extraction](docs/extraction.md)
 - [Fact grains and dimensional model](docs/data_model.md)
 - [Architecture decision records](docs/decisions/)
 - Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton
