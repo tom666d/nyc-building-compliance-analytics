@@ -4,12 +4,14 @@
 
 | Model | Declared grain | Natural key |
 |---|---|---|
-| `fct_permits` | one DOB NOW work permit sequence | job filing number + work permit + sequence number |
+| `fct_permits` | provisional; permit issuance/work-type relationship requires refinement | no validated natural key yet |
 | `fct_complaints` | one DOB complaint | complaint number |
 | `fct_violations` | one legacy BIS DOB violation record | ISN DOB BIS violation |
 | `fct_building_compliance_daily` | one building per snapshot date | building key + snapshot date |
 
 The snapshot is intentionally downstream of event facts. This prevents a many-to-many join between permits, complaints, and violations, which would multiply measures.
+
+The original permit-grain hypothesis failed live-source profiling. ADR 0004 records why the current permit fact scaffold must not be treated as production-ready. Exact source duplicates and legitimate multiple work types require separate handling.
 
 ## Dimensions
 

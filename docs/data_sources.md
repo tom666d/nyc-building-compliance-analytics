@@ -31,3 +31,7 @@ NYC states that some records overlap between legacy DOB Violations and newer DOB
 - Apply server-side date filters for incremental runs.
 - Store `_ingested_at`, `_source_dataset_id`, `_source_row_hash`, and `_load_id` with every raw record.
 - Never silently drop records missing BIN; surface them in quality reporting.
+
+## Profiling evidence
+
+The point-in-time live-source profile, including row counts, key tests, status distributions, and the failed permit-grain hypothesis, is documented in [source_profile.md](source_profile.md). The evidence shows that the permit grain is provisional and that the staging scaffold must be revised before its first warehouse build.

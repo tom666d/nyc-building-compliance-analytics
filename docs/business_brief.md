@@ -44,9 +44,9 @@ Create a governed building-compliance analytics layer that:
 | Metric | Definition |
 |---|---|
 | Open complaint | latest source record where normalized complaint status is not `CLOSED` |
-| Open violation | violation with no disposition date |
-| Active permit | permit status in the maintained active-status seed and not expired as of the snapshot date |
+| Open violation | normalized legacy violation category explicitly mapped to an active category; mapping remains provisional pending domain validation |
+| Active permit | permit issuance whose mapped status is active and whose expiration date has not passed; grain and mapping remain provisional |
 | Complaint resolution days | calendar days from date entered to disposition date; null while unresolved |
 | Permit approval-to-issue days | calendar days from approved date to issued date, only when both are present |
 
-These definitions are hypotheses to validate with domain users, not universal facts.
+These definitions are hypotheses to validate with domain users, not universal facts. Live-source profiling invalidated the original permit key and the simple violation rule based only on disposition date; ADR 0004 and the source profile preserve that evidence before implementation is revised.
