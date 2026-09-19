@@ -1,2 +1,0 @@
-[console_scripts]
-nyc-dob-ingest = nyc_dob_ingestion.cli:main
