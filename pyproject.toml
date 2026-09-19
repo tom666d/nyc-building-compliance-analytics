@@ -24,6 +24,7 @@ airflow = ["apache-airflow>=2.10,<3"]
 [project.scripts]
 nyc-dob-extract = "nyc_dob_ingestion.extract_cli:main"
 nyc-dob-ingest = "nyc_dob_ingestion.cli:main"
+nyc-dob-snowflake-check = "nyc_dob_ingestion.snowflake_check:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

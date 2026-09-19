@@ -44,6 +44,8 @@ The Python package owns extraction from NYC Open Data and loading into the Snowf
 
 - `datasets.py`: stable dataset IDs and loading configuration.
 - `socrata.py`: paginated HTTP requests to the source API.
+- `snowflake.py`: workload-specific connection settings and credential validation.
+- `snowflake_check.py`: read-only role and object smoke checks.
 - `snowflake_loader.py`: raw payload hashing and Snowflake inserts.
 - `cli.py`: the command-line entry point that connects the components.
 
@@ -55,7 +57,7 @@ Python unit tests verify deterministic behavior without requiring the live API o
 
 ### `infrastructure/snowflake`
 
-Infrastructure scripts create Snowflake roles, a warehouse, database, schemas, grants, and raw tables. This keeps environment setup reviewable and repeatable instead of relying only on manual console actions.
+Infrastructure scripts create Snowflake roles, a warehouse, database, schemas, grants, raw tables, and cost controls. `bootstrap.sql` creates the shared foundation, `grant_roles.example.sql` keeps user assignment explicit, and `verify.sql` provides read-only checks. This keeps environment setup reviewable and repeatable instead of relying only on manual console actions.
 
 ### `dbt/nyc_building_compliance`
 
@@ -98,6 +100,7 @@ These paths may exist locally but must not be committed:
 |---|---|---|
 | `.env` | Real credentials and local settings | Contains secrets |
 | `.venv/` | Installed Python environment | Recreated from `pyproject.toml` |
+| `build/`, `*.egg-info/` | Python packaging output | Recreated during installation |
 | `work/` | Downloaded samples and scratch analysis | Mutable and potentially large |
 | `outputs/` | Local user-facing generated artifacts | Not source code |
 | `__pycache__/`, `.pytest_cache/`, `.ruff_cache/` | Tool caches | Recreated automatically |

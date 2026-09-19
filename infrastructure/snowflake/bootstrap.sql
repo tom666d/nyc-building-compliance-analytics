@@ -1,24 +1,122 @@
--- Run with a Snowflake role permitted to create roles, warehouse, database, and schemas.
-create role if not exists NYC_DOB_LOADER;
-create role if not exists NYC_DOB_TRANSFORMER;
-create warehouse if not exists NYC_DOB_WH warehouse_size = 'XSMALL' auto_suspend = 60;
-create database if not exists NYC_DOB_ANALYTICS;
-create schema if not exists NYC_DOB_ANALYTICS.RAW;
-create schema if not exists NYC_DOB_ANALYTICS.DEV;
+-- One-time account bootstrap for the NYC DOB analytics project.
+-- Run each section with a user that can assume the named system role.
+-- The script is safe to rerun: object creation uses IF NOT EXISTS and grants are additive.
 
-grant usage on warehouse NYC_DOB_WH to role NYC_DOB_LOADER;
-grant usage on warehouse NYC_DOB_WH to role NYC_DOB_TRANSFORMER;
-grant usage on database NYC_DOB_ANALYTICS to role NYC_DOB_LOADER;
-grant usage on database NYC_DOB_ANALYTICS to role NYC_DOB_TRANSFORMER;
-grant usage, create table on schema NYC_DOB_ANALYTICS.RAW to role NYC_DOB_LOADER;
-grant usage on schema NYC_DOB_ANALYTICS.RAW to role NYC_DOB_TRANSFORMER;
-grant select on future tables in schema NYC_DOB_ANALYTICS.RAW to role NYC_DOB_TRANSFORMER;
-grant usage, create table, create view on schema NYC_DOB_ANALYTICS.DEV to role NYC_DOB_TRANSFORMER;
+-- Create workload-specific custom roles.
+USE ROLE USERADMIN;
 
-use schema NYC_DOB_ANALYTICS.RAW;
-create table if not exists RAW_DOB_NOW_PERMITS (
-  raw_payload variant, source_dataset_id varchar, source_row_hash varchar,
-  load_id varchar, ingested_at timestamp_tz
+CREATE ROLE IF NOT EXISTS NYC_DOB_LOADER
+  COMMENT = 'Loads immutable NYC Open Data payloads into the RAW schema';
+CREATE ROLE IF NOT EXISTS NYC_DOB_TRANSFORMER
+  COMMENT = 'Builds tested dbt models from RAW data';
+CREATE ROLE IF NOT EXISTS NYC_DOB_READER
+  COMMENT = 'Reads curated marts for business intelligence consumption';
+
+-- Attach custom roles to the recommended system-role hierarchy.
+USE ROLE SECURITYADMIN;
+
+GRANT ROLE NYC_DOB_LOADER TO ROLE SYSADMIN;
+GRANT ROLE NYC_DOB_TRANSFORMER TO ROLE SYSADMIN;
+GRANT ROLE NYC_DOB_READER TO ROLE SYSADMIN;
+
+-- SYSADMIN owns project infrastructure and data objects.
+USE ROLE SYSADMIN;
+
+CREATE WAREHOUSE IF NOT EXISTS NYC_DOB_WH
+  WAREHOUSE_SIZE = 'XSMALL'
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE
+  INITIALLY_SUSPENDED = TRUE
+  COMMENT = 'Cost-controlled compute for the NYC DOB portfolio project';
+
+-- Reapply mutable cost settings when this script is rerun.
+ALTER WAREHOUSE NYC_DOB_WH SET
+  WAREHOUSE_SIZE = 'XSMALL'
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE;
+
+CREATE DATABASE IF NOT EXISTS NYC_DOB_ANALYTICS
+  COMMENT = 'NYC Department of Buildings public-data analytics';
+
+CREATE SCHEMA IF NOT EXISTS NYC_DOB_ANALYTICS.RAW
+  COMMENT = 'Immutable source payloads and ingestion metadata';
+CREATE SCHEMA IF NOT EXISTS NYC_DOB_ANALYTICS.DEV
+  COMMENT = 'Default development schema used by dbt connections';
+CREATE SCHEMA IF NOT EXISTS NYC_DOB_ANALYTICS.DEV_STAGING
+  COMMENT = 'Typed and renamed source views';
+CREATE SCHEMA IF NOT EXISTS NYC_DOB_ANALYTICS.DEV_INTERMEDIATE
+  COMMENT = 'Reusable transformations between staging and marts';
+CREATE SCHEMA IF NOT EXISTS NYC_DOB_ANALYTICS.DEV_MARTS
+  COMMENT = 'Curated dimensional models and BI-facing tables';
+
+CREATE TABLE IF NOT EXISTS NYC_DOB_ANALYTICS.RAW.RAW_DOB_NOW_PERMITS (
+  raw_payload VARIANT,
+  source_dataset_id VARCHAR,
+  source_row_hash VARCHAR,
+  load_id VARCHAR,
+  ingested_at TIMESTAMP_TZ
 );
-create table if not exists RAW_DOB_COMPLAINTS like RAW_DOB_NOW_PERMITS;
-create table if not exists RAW_DOB_VIOLATIONS like RAW_DOB_NOW_PERMITS;
+CREATE TABLE IF NOT EXISTS NYC_DOB_ANALYTICS.RAW.RAW_DOB_COMPLAINTS
+  LIKE NYC_DOB_ANALYTICS.RAW.RAW_DOB_NOW_PERMITS;
+CREATE TABLE IF NOT EXISTS NYC_DOB_ANALYTICS.RAW.RAW_DOB_VIOLATIONS
+  LIKE NYC_DOB_ANALYTICS.RAW.RAW_DOB_NOW_PERMITS;
+
+-- All three workload roles can use the same small compute warehouse.
+GRANT USAGE ON WAREHOUSE NYC_DOB_WH TO ROLE NYC_DOB_LOADER;
+GRANT USAGE ON WAREHOUSE NYC_DOB_WH TO ROLE NYC_DOB_TRANSFORMER;
+GRANT USAGE ON WAREHOUSE NYC_DOB_WH TO ROLE NYC_DOB_READER;
+
+GRANT USAGE ON DATABASE NYC_DOB_ANALYTICS TO ROLE NYC_DOB_LOADER;
+GRANT USAGE ON DATABASE NYC_DOB_ANALYTICS TO ROLE NYC_DOB_TRANSFORMER;
+GRANT USAGE ON DATABASE NYC_DOB_ANALYTICS TO ROLE NYC_DOB_READER;
+
+-- The loader can append and verify raw records, but cannot alter curated models.
+GRANT USAGE ON SCHEMA NYC_DOB_ANALYTICS.RAW TO ROLE NYC_DOB_LOADER;
+GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA NYC_DOB_ANALYTICS.RAW
+  TO ROLE NYC_DOB_LOADER;
+GRANT SELECT, INSERT ON FUTURE TABLES IN SCHEMA NYC_DOB_ANALYTICS.RAW
+  TO ROLE NYC_DOB_LOADER;
+
+-- dbt can read RAW and create models only in development schemas.
+GRANT USAGE ON SCHEMA NYC_DOB_ANALYTICS.RAW TO ROLE NYC_DOB_TRANSFORMER;
+GRANT SELECT ON ALL TABLES IN SCHEMA NYC_DOB_ANALYTICS.RAW
+  TO ROLE NYC_DOB_TRANSFORMER;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA NYC_DOB_ANALYTICS.RAW
+  TO ROLE NYC_DOB_TRANSFORMER;
+
+GRANT USAGE ON SCHEMA NYC_DOB_ANALYTICS.DEV TO ROLE NYC_DOB_TRANSFORMER;
+GRANT USAGE, CREATE TABLE, CREATE VIEW
+  ON SCHEMA NYC_DOB_ANALYTICS.DEV_STAGING TO ROLE NYC_DOB_TRANSFORMER;
+GRANT USAGE, CREATE TABLE, CREATE VIEW
+  ON SCHEMA NYC_DOB_ANALYTICS.DEV_INTERMEDIATE TO ROLE NYC_DOB_TRANSFORMER;
+GRANT USAGE, CREATE TABLE, CREATE VIEW
+  ON SCHEMA NYC_DOB_ANALYTICS.DEV_MARTS TO ROLE NYC_DOB_TRANSFORMER;
+
+-- BI users see only curated marts, including models created in the future.
+GRANT USAGE ON SCHEMA NYC_DOB_ANALYTICS.DEV_MARTS TO ROLE NYC_DOB_READER;
+GRANT SELECT ON ALL TABLES IN SCHEMA NYC_DOB_ANALYTICS.DEV_MARTS
+  TO ROLE NYC_DOB_READER;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA NYC_DOB_ANALYTICS.DEV_MARTS
+  TO ROLE NYC_DOB_READER;
+GRANT SELECT ON ALL VIEWS IN SCHEMA NYC_DOB_ANALYTICS.DEV_MARTS
+  TO ROLE NYC_DOB_READER;
+GRANT SELECT ON FUTURE VIEWS IN SCHEMA NYC_DOB_ANALYTICS.DEV_MARTS
+  TO ROLE NYC_DOB_READER;
+
+-- Only ACCOUNTADMIN can create and assign a resource monitor.
+-- One credit is a safety ceiling for this learning project, not a cost estimate.
+USE ROLE ACCOUNTADMIN;
+
+CREATE RESOURCE MONITOR IF NOT EXISTS NYC_DOB_MONTHLY_MONITOR
+  WITH CREDIT_QUOTA = 1
+  FREQUENCY = MONTHLY
+  START_TIMESTAMP = IMMEDIATELY
+  TRIGGERS
+    ON 50 PERCENT DO NOTIFY
+    ON 75 PERCENT DO NOTIFY
+    ON 100 PERCENT DO SUSPEND_IMMEDIATE;
+
+ALTER WAREHOUSE NYC_DOB_WH
+  SET RESOURCE_MONITOR = NYC_DOB_MONTHLY_MONITOR;
+
+USE ROLE SYSADMIN;

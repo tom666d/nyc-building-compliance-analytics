@@ -4,6 +4,10 @@ import pytest
 
 from nyc_dob_ingestion.datasets import DATASETS
 from nyc_dob_ingestion.extract import extract_to_jsonl
+from nyc_dob_ingestion.snowflake import (
+    SnowflakeConfigurationError,
+    connection_parameters_from_env,
+)
 from nyc_dob_ingestion.snowflake_loader import canonical_json, row_hash
 from nyc_dob_ingestion.socrata import SocrataClient
 
@@ -84,3 +88,49 @@ def test_extract_writes_json_lines_and_manifest(tmp_path):
     assert len(manifest.sha256) == 64
     written_manifest = json.loads(output.with_suffix(".manifest.json").read_text())
     assert written_manifest["dataset_id"] == "eabe-havv"
+
+
+def test_snowflake_connection_uses_least_privilege_workload_defaults():
+    environment = {
+        "SNOWFLAKE_ACCOUNT": "example-account",
+        "SNOWFLAKE_USER": "example-user",
+        "SNOWFLAKE_PASSWORD": "not-a-real-secret",
+        "SNOWFLAKE_SCHEMA": "CUSTOM_DBT_SCHEMA",
+    }
+
+    loader = connection_parameters_from_env("loader", environment)
+    transformer = connection_parameters_from_env("transformer", environment)
+    reader = connection_parameters_from_env("reader", environment)
+
+    assert (loader["role"], loader["schema"]) == ("NYC_DOB_LOADER", "RAW")
+    assert (transformer["role"], transformer["schema"]) == (
+        "NYC_DOB_TRANSFORMER",
+        "CUSTOM_DBT_SCHEMA",
+    )
+    assert (reader["role"], reader["schema"]) == ("NYC_DOB_READER", "DEV_MARTS")
+
+
+def test_snowflake_connection_allows_explicit_role_override():
+    environment = {
+        "SNOWFLAKE_ACCOUNT": "example-account",
+        "SNOWFLAKE_USER": "example-user",
+        "SNOWFLAKE_PASSWORD": "not-a-real-secret",
+        "SNOWFLAKE_INGEST_ROLE": "CUSTOM_LOADER",
+    }
+
+    parameters = connection_parameters_from_env("loader", environment)
+
+    assert parameters["role"] == "CUSTOM_LOADER"
+
+
+def test_snowflake_connection_reports_variable_names_but_not_secret_values():
+    with pytest.raises(SnowflakeConfigurationError) as error:
+        connection_parameters_from_env(
+            "loader",
+            {"SNOWFLAKE_ACCOUNT": "", "SNOWFLAKE_USER": "", "SNOWFLAKE_PASSWORD": ""},
+        )
+
+    message = str(error.value)
+    assert "SNOWFLAKE_ACCOUNT" in message
+    assert "SNOWFLAKE_USER" in message
+    assert "SNOWFLAKE_PASSWORD" in message

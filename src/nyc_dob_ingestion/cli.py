@@ -1,24 +1,12 @@
 import argparse
 import os
 
-import snowflake.connector
 from dotenv import load_dotenv
 
 from .datasets import DATASETS
+from .snowflake import connection_from_env
 from .snowflake_loader import load_rows
 from .socrata import SocrataClient
-
-
-def connection_from_env():
-    return snowflake.connector.connect(
-        account=os.environ["SNOWFLAKE_ACCOUNT"],
-        user=os.environ["SNOWFLAKE_USER"],
-        password=os.environ["SNOWFLAKE_PASSWORD"],
-        role=os.getenv("SNOWFLAKE_ROLE", "NYC_DOB_TRANSFORMER"),
-        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE", "NYC_DOB_WH"),
-        database=os.getenv("SNOWFLAKE_DATABASE", "NYC_DOB_ANALYTICS"),
-        schema="RAW",
-    )
 
 
 def parse_args():
@@ -38,7 +26,7 @@ def main():
     args = parse_args()
     selected = DATASETS.values() if args.all else [DATASETS[args.dataset]]
     client = SocrataClient(os.getenv("NYC_OPEN_DATA_APP_TOKEN"))
-    with connection_from_env() as connection:
+    with connection_from_env("loader") as connection:
         for dataset in selected:
             total = 0
             for rows in client.pages(dataset, limit=args.limit, page_size=args.page_size):
