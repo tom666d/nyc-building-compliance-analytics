@@ -2,21 +2,43 @@ version: 2
 
 models:
   - name: stg_dob_now_permits
-    description: Latest source state for each DOB NOW permit sequence.
+    description: >-
+      One row per exact DOB NOW permit source payload. Distinct source rows are retained
+      because live profiling did not find a trustworthy permit natural key.
     columns:
       - name: permit_key
+        description: Technical content key equal to the canonical source-row SHA-256 hash.
         tests: [not_null, unique]
       - name: bin
         tests:
           - dbt_utils.expression_is_true:
-              expression: "regexp_like(bin, '^[0-9]{7}$')"
+              expression: "regexp '^[0-9]{7}$'"
+      - name: borough
+        tests:
+          - accepted_values:
+              values: ['MANHATTAN', 'BRONX', 'BROOKLYN', 'QUEENS', 'STATEN ISLAND']
   - name: stg_dob_complaints
     description: Latest source state for each DOB complaint.
     columns:
       - name: complaint_key
         tests: [not_null, unique]
+      - name: complaint_number
+        tests: [not_null]
+      - name: borough
+        tests:
+          - accepted_values:
+              values: ['MANHATTAN', 'BRONX', 'BROOKLYN', 'QUEENS', 'STATEN ISLAND']
   - name: stg_dob_violations
     description: Latest source state for each legacy BIS DOB violation.
     columns:
       - name: violation_key
         tests: [not_null, unique]
+      - name: source_violation_id
+        tests: [not_null]
+      - name: issue_date_parse_failed
+        description: True when a non-null source issue date fails the documented YYYYMMDD rule.
+        tests: [not_null]
+      - name: borough
+        tests:
+          - accepted_values:
+              values: ['MANHATTAN', 'BRONX', 'BROOKLYN', 'QUEENS', 'STATEN ISLAND']

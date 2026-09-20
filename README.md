@@ -52,6 +52,8 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Step 3：理解 Git、repository 與專案目錄](docs/learning/step-03-git-and-repository.md)
 - [Step 4：用 Python 取得第一批真實資料](docs/learning/step-04-python-extraction.md)
 - [Step 5：建立 Snowflake 資料倉儲基礎](docs/learning/step-05-snowflake-foundation.md)
+- [Step 5.5：安全連線與第一次 Snowflake 真實資料載入](docs/learning/step-05-5-secure-connection-and-first-load.md)
+- [Step 6：使用 dbt 建立 staging models](docs/learning/step-06-dbt-staging-models.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Point-in-time source profile](docs/source_profile.md)
@@ -59,6 +61,7 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Local source extraction](docs/extraction.md)
 - [Snowflake foundation and setup](docs/snowflake_setup.md)
 - [Verified Snowflake deployment evidence](docs/snowflake_deployment_evidence.md)
+- [dbt staging model design and evidence](docs/staging_models.md)
 - [Fact grains and dimensional model](docs/data_model.md)
 - [Architecture decision records](docs/decisions/)
 - Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton
@@ -71,4 +74,4 @@ Decisions are recorded before implementation in `docs/decisions`. Suggested mile
 
 Phase 1 models DOB NOW approved permits, DOB complaints, and legacy BIS DOB violations. DOB NOW Safety Violations is deliberately deferred until a cross-system deduplication rule is profiled and validated. This limitation is visible rather than hidden.
 
-The Snowflake foundation was provisioned and verified in a real trial account on 2026-09-20. Raw data ingestion and the first cloud dbt build remain separate, upcoming milestones.
+The Snowflake foundation, key-pair service authentication, a bounded 3,000-row real-data load, and the three dbt staging views were verified in a real trial account on 2026-09-20. Dimensional marts remain an upcoming milestone.

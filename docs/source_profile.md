@@ -14,6 +14,12 @@ This profile records reproducible observations from the official NYC Open Data S
 
 Combined source volume at profiling time: 6,613,374 rows.
 
+## First warehouse sample
+
+On 2026-09-20, the ingestion pipeline loaded a bounded 1,000-row sample from each official source into Snowflake. All three samples contained 1,000 distinct canonical source-row hashes.
+
+The staging profile found two malformed legacy violation issue-date strings: `02230913` and `0306`. Automatic conversion interpreted the first as the year 223. The model now preserves the original source value, returns a null typed date, and exposes an `issue_date_parse_failed` flag rather than guessing a correction.
+
 ## API and schema observations
 
 - Dataset metadata is available at `https://data.cityofnewyork.us/api/views/{dataset_id}`.

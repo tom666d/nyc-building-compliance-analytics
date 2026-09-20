@@ -9,12 +9,13 @@
 3. ✅ [Step 3：理解 Git、repository 與專案目錄](step-03-git-and-repository.md)
 4. ✅ [Step 4：用 Python 取得第一批真實資料](step-04-python-extraction.md)
 5. ✅ [Step 5：建立 Snowflake 資料倉儲基礎](step-05-snowflake-foundation.md)
-6. Step 6：使用 dbt 建立 staging models
-7. Step 7：建立事實表、維度表與每日快照
-8. Step 8：加入資料品質測試
-9. Step 9：建立文件與資料血緣
-10. Step 10：使用 Apache Airflow 自動執行
-11. Step 11：建立 GitHub 持續整合
-12. Step 12：建立商業智慧消費層與面試展示
+6. ✅ [Step 5.5：安全連線與第一次 Snowflake 真實資料載入](step-05-5-secure-connection-and-first-load.md)
+7. ✅ [Step 6：使用 dbt 建立 staging models](step-06-dbt-staging-models.md)
+8. Step 7：建立事實表、維度表與每日快照
+9. Step 8：加入資料品質測試
+10. Step 9：建立文件與資料血緣
+11. Step 10：使用 Apache Airflow 自動執行
+12. Step 11：建立 GitHub 持續整合
+13. Step 12：建立商業智慧消費層與面試展示
 
 完成一個步驟不代表只寫完程式，而是要能用自己的話說明：問題、選擇、結果與限制。
