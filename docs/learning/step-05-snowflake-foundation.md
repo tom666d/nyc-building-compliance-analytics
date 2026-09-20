@@ -17,13 +17,13 @@ Step 4 已證明 Python 能從 NYC Open Data 取得真實資料。Step 5 的工�
 
 ## 先說清楚目前完成狀態
 
-這台電腦目前沒有 Snowflake credentials，也沒有設定 `.env`。因此：
+2026-09-20 已在真實 Snowflake trial account 完成雲端部署與唯讀驗證：
 
-- 已完成：可執行的 Structured Query Language 腳本、Python 連線設定、角色檢查、自動測試、dbt schema 驗證與文件；
-- 尚未完成：在真實 Snowflake account 內實際建立 objects；
-- 原因：沒有 account、username、password 就不能代表使用者登入外部服務；
-- 正確做法：保留可重複執行的 setup，等 credentials 安全地放入本機 `.env` 後再執行；
-- 錯誤做法：在作品集宣稱「Snowflake 已部署」，或把密碼貼在對話、程式碼或 Git。
+- 已完成：可執行的 Structured Query Language 腳本、角色與權限、warehouse、database、五個 schemas、三張 raw tables、resource monitor、自動測試、dbt schema 驗證與文件；
+- 已驗證：46 個 bootstrap statements 全部成功，三個專案 roles 均能切換並通過預期的 object access checks；
+- 尚未完成：本機 Python/dbt 的登入、真實資料載入，以及 dbt cloud build；
+- 安全界線：account identifier、username、password 等本機設定不提交到 Git；
+- 證據界線：目前可以說「Snowflake foundation 已部署」，但不能說「pipeline 已載入資料」或「dbt marts 已建好」。
 
 這也是 data engineering 很重要的誠信原則：local validation 和 deployed validation 是兩種不同證據。
 
@@ -353,7 +353,19 @@ make snowflake-check
 - 1 個 intermediate model → `DEV_INTERMEDIATE`；
 - 5 個 mart models → `DEV_MARTS`。
 
-雲端 smoke test 尚未執行，因為本機沒有 Snowflake credentials。取得 credentials 後，必須再次執行 `make snowflake-check`，才能把 cloud provisioning 標記為 verified。
+2026-09-20 的雲端 worksheet 驗證結果：
+
+- 46 個 bootstrap statements 全部成功；
+- 三個 custom roles 已建立、接入 role hierarchy，並指派給開發 user；
+- database 與 `RAW`、`DEV`、`DEV_STAGING`、`DEV_INTERMEDIATE`、`DEV_MARTS` 全部存在；
+- `RAW` schema 內的預期 table 數量為 3；
+- loader、transformer、reader 三個 roles 均能成功執行對應的唯讀 checks；
+- warehouse 為 extra-small，auto-suspend 是 60 秒，auto-resume 已開啟；
+- monthly resource monitor 已連接至 warehouse。
+
+`DEV_MARTS` 當時有 0 張 table，這不是錯誤：我們還沒有在雲端執行 dbt。Raw tables 也尚未載入 NYC 資料。雲端 objects 已存在，不等於整條 data pipeline 已完成。
+
+本機 `make snowflake-check` 仍待設定本機 authentication。這項檢查將驗證 Python connector，而不是重複證明 Snowsight 中的 objects 是否存在。
 
 ## 知識點總結
 
@@ -366,7 +378,7 @@ make snowflake-check
 - Existing grants 和 future grants 解決不同時間點的 objects，通常兩者都需要。
 - dbt custom schema 會影響實際 object 名稱，必須用 manifest 驗證。
 - Auto-suspend、最小 warehouse size 與 resource monitor 是作品集環境的重要成本保護。
-- Credentials 不應存在 Git；local validation 不等於 cloud deployment。
+- Credentials 不應存在 Git；cloud object verification、local connector verification 與資料載入是三種不同證據。
 
 ## 官方文件
 
@@ -411,7 +423,7 @@ The database, schemas, tables, roles, grants, warehouse settings, and resource m
 
 ### 8. Did you deploy this to Snowflake?
 
-Not yet in the current environment. I implemented and locally validated the repeatable setup, role selection, dbt schema resolution, and tests, but no Snowflake credentials are configured here. I explicitly keep cloud provisioning marked pending until the read-only checks succeed against a real account.
+Yes. I executed the version-controlled bootstrap in a Snowflake trial account and verified the database, five schemas, three raw tables, three least-privilege roles, warehouse settings, and resource monitor. The raw tables and marts were still empty at that milestone because ingestion and the first dbt build are separate steps. I document that boundary instead of presenting the whole pipeline as complete.
 
 ### 9. Why not use ACCOUNTADMIN for the pipeline?
 
@@ -431,5 +443,5 @@ I would replace a long-lived password with an organization-approved non-interact
 4. Existing grant 和 future grant 有什麼差別？
 5. 為什麼 raw payload 使用 `VARIANT`？
 6. `DEV_STAGING` 名稱從哪裡來？
-7. 哪些證據已在本機驗證，哪些仍需要真實 Snowflake account？
+7. 哪些證據來自本機 tests、哪些來自真實 Snowflake account、哪些仍要等資料載入？
 8. 為什麼 `.env` 不可以提交到 Git？

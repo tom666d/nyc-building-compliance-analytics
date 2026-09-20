@@ -2,7 +2,9 @@
 
 ## Status
 
-The repeatable setup, role model, cost controls, connection validation, and local tests are implemented. Cloud provisioning has not been executed because this workspace does not contain Snowflake credentials. This distinction is intentional: repository evidence must not claim that an external environment exists when it has not been verified.
+The repeatable setup, role model, cost controls, connection validation, and local tests are implemented. The bootstrap and read-only verification SQL were successfully executed in a real Snowflake trial account on 2026-09-20. Local command-line authentication remains a separate follow-up before Python ingestion and dbt execution.
+
+The repository intentionally omits the account identifier, username, password, and other account-specific values. See [Snowflake deployment evidence](snowflake_deployment_evidence.md) for the verified results and their limits.
 
 ## Why Snowflake is used
 
@@ -118,14 +120,26 @@ The raw layer does not rename fields or reinterpret status values. Those transfo
 
 ## Verification evidence
 
-Local verification can prove that:
+Local verification proves that:
 
 - the Python connection configuration chooses a different least-privilege role and schema for each workload;
 - missing credential names produce a controlled error without exposing values;
 - the dbt graph resolves to the schemas created by the bootstrap;
 - the SQL, Python, and documentation are version controlled.
 
-Only a successful check against a real Snowflake account can prove that the cloud objects and grants exist. That verification remains pending until credentials are configured locally.
+The 2026-09-20 Snowflake worksheet run additionally proved that:
+
+- all 46 bootstrap statements completed successfully;
+- the three custom roles were created, connected to the role hierarchy, and assigned to the development user;
+- the database and five expected schemas exist;
+- the `RAW` schema contains all three expected raw tables;
+- loader, transformer, and reader role switches and read-only object checks succeed;
+- the warehouse is extra-small with 60-second auto-suspend and auto-resume enabled;
+- the one-credit monthly resource monitor is attached to the warehouse.
+
+The curated mart schema contained no model tables at verification time. This is expected because dbt has not yet been executed against the cloud account. The raw tables also intentionally remain empty until the ingestion step.
+
+The in-browser verification and the local command-line check are different evidence. The former proves that the cloud objects and grants exist; `make snowflake-check` remains pending until local authentication is configured and will prove that the Python connector can use the same roles.
 
 ## Authentication limitation
 

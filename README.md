@@ -58,6 +58,7 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Repository structure](docs/repository_structure.md)
 - [Local source extraction](docs/extraction.md)
 - [Snowflake foundation and setup](docs/snowflake_setup.md)
+- [Verified Snowflake deployment evidence](docs/snowflake_deployment_evidence.md)
 - [Fact grains and dimensional model](docs/data_model.md)
 - [Architecture decision records](docs/decisions/)
 - Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton
@@ -69,3 +70,5 @@ Decisions are recorded before implementation in `docs/decisions`. Suggested mile
 ## Current scope
 
 Phase 1 models DOB NOW approved permits, DOB complaints, and legacy BIS DOB violations. DOB NOW Safety Violations is deliberately deferred until a cross-system deduplication rule is profiled and validated. This limitation is visible rather than hidden.
+
+The Snowflake foundation was provisioned and verified in a real trial account on 2026-09-20. Raw data ingestion and the first cloud dbt build remain separate, upcoming milestones.
