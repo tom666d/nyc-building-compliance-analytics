@@ -1,4 +1,4 @@
-.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-deps dbt-parse dbt-build dbt-docs
+.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-docs
 
 install:
 	python3 -m venv .venv
@@ -24,13 +24,16 @@ ingest-sample:
 	.venv/bin/nyc-dob-ingest --all --limit 1000
 
 dbt-deps:
-	cd dbt/nyc_building_compliance && ../../.venv/bin/dbt deps
+	.venv/bin/dotenv run -- .venv/bin/dbt deps --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+
+dbt-debug:
+	.venv/bin/dotenv run -- .venv/bin/dbt debug --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-parse:
-	cd dbt/nyc_building_compliance && ../../.venv/bin/dbt parse --profiles-dir .
+	.venv/bin/dotenv run -- .venv/bin/dbt parse --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-build:
-	cd dbt/nyc_building_compliance && ../../.venv/bin/dbt build --profiles-dir .
+	.venv/bin/dotenv run -- .venv/bin/dbt build --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-docs:
-	cd dbt/nyc_building_compliance && ../../.venv/bin/dbt docs generate --profiles-dir .
+	.venv/bin/dotenv run -- .venv/bin/dbt docs generate --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance

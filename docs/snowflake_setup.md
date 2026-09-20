@@ -2,7 +2,7 @@
 
 ## Status
 
-The repeatable setup, role model, cost controls, connection validation, and local tests are implemented. The bootstrap and read-only verification SQL were successfully executed in a real Snowflake trial account on 2026-09-20. Local command-line authentication remains a separate follow-up before Python ingestion and dbt execution.
+The repeatable setup, role model, cost controls, connection validation, and local tests are implemented. The bootstrap and read-only verification SQL were successfully executed in a real Snowflake trial account on 2026-09-20. A dedicated service user subsequently authenticated from the local Python connector and dbt through an encrypted private key.
 
 The repository intentionally omits the account identifier, username, password, and other account-specific values. See [Snowflake deployment evidence](snowflake_deployment_evidence.md) for the verified results and their limits.
 
@@ -74,14 +74,15 @@ The executing user must be able to assume `USERADMIN`, `SECURITYADMIN`, `SYSADMI
 
 Copy `infrastructure/snowflake/grant_roles.example.sql`, replace the example username, and run it with `SECURITYADMIN`. For a portfolio account, the same developer may receive all three roles and explicitly switch roles. Production automation should use separate identities and non-password authentication.
 
-### 4. Create the local environment file
+### 4. Create a service identity and local environment file
 
-Copy `.env.example` to `.env` and fill in the local values:
+Generate an encrypted PKCS#8 key pair outside Git. Use `infrastructure/snowflake/create_service_user.example.sql` to create the service user, register only the public key, and assign project roles. Copy `.env.example` to `.env` and fill in the local values:
 
 ```text
 SNOWFLAKE_ACCOUNT=<account identifier>
-SNOWFLAKE_USER=<username>
-SNOWFLAKE_PASSWORD=<local secret>
+SNOWFLAKE_USER=<service username>
+SNOWFLAKE_PRIVATE_KEY_PATH=<absolute local path>
+SNOWFLAKE_PRIVATE_KEY_PASSPHRASE=<local secret>
 ```
 
 `.env` is ignored by Git. `.env.example` contains names and safe defaults only.
@@ -139,11 +140,11 @@ The 2026-09-20 Snowflake worksheet run additionally proved that:
 
 The curated mart schema contained no model tables at verification time. This is expected because dbt has not yet been executed against the cloud account. The raw tables also intentionally remain empty until the ingestion step.
 
-The in-browser verification and the local command-line check are different evidence. The former proves that the cloud objects and grants exist; `make snowflake-check` remains pending until local authentication is configured and will prove that the Python connector can use the same roles.
+The in-browser verification and the local command-line check are different evidence. The former proves that the cloud objects and grants exist. The latter was completed for loader, transformer, and reader workloads and proves that the Python connector can authenticate with the service identity and activate each intended role.
 
-## Authentication limitation
+## Authentication design
 
-The current local learning path accepts a password from `.env`. Before automated deployment, replace long-lived password authentication with an approved non-interactive method such as Snowflake key-pair authentication and store secrets in the orchestration or continuous-integration secret manager. The repository must never contain a private key or passphrase.
+The local pipeline uses an encrypted private key and dedicated Snowflake `TYPE = SERVICE` identity. The repository supports password authentication only as a compatibility fallback and rejects configurations that provide both methods. Before remote orchestration or continuous integration, place the private key and passphrase in the platform's secret manager and use separate workload identities where practical.
 
 ## Official references
 

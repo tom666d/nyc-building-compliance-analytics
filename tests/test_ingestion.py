@@ -123,14 +123,56 @@ def test_snowflake_connection_allows_explicit_role_override():
     assert parameters["role"] == "CUSTOM_LOADER"
 
 
+def test_snowflake_connection_supports_encrypted_private_key():
+    environment = {
+        "SNOWFLAKE_ACCOUNT": "example-account",
+        "SNOWFLAKE_USER": "example-service-user",
+        "SNOWFLAKE_PRIVATE_KEY_PATH": "/local/secrets/snowflake_key.p8",
+        "SNOWFLAKE_PRIVATE_KEY_PASSPHRASE": "not-a-real-passphrase",
+    }
+
+    parameters = connection_parameters_from_env("loader", environment)
+
+    assert parameters["authenticator"] == "SNOWFLAKE_JWT"
+    assert parameters["private_key_file"] == environment["SNOWFLAKE_PRIVATE_KEY_PATH"]
+    assert parameters["private_key_file_pwd"] == environment[
+        "SNOWFLAKE_PRIVATE_KEY_PASSPHRASE"
+    ]
+    assert "password" not in parameters
+
+
+def test_snowflake_connection_rejects_multiple_authentication_methods():
+    environment = {
+        "SNOWFLAKE_ACCOUNT": "example-account",
+        "SNOWFLAKE_USER": "example-service-user",
+        "SNOWFLAKE_PASSWORD": "not-a-real-secret",
+        "SNOWFLAKE_PRIVATE_KEY_PATH": "/local/secrets/snowflake_key.p8",
+        "SNOWFLAKE_PRIVATE_KEY_PASSPHRASE": "not-a-real-passphrase",
+    }
+
+    with pytest.raises(SnowflakeConfigurationError, match="one authentication method"):
+        connection_parameters_from_env("loader", environment)
+
+
 def test_snowflake_connection_reports_variable_names_but_not_secret_values():
     with pytest.raises(SnowflakeConfigurationError) as error:
         connection_parameters_from_env(
             "loader",
-            {"SNOWFLAKE_ACCOUNT": "", "SNOWFLAKE_USER": "", "SNOWFLAKE_PASSWORD": ""},
+            {"SNOWFLAKE_ACCOUNT": "", "SNOWFLAKE_USER": ""},
         )
 
     message = str(error.value)
     assert "SNOWFLAKE_ACCOUNT" in message
     assert "SNOWFLAKE_USER" in message
+
+
+def test_snowflake_connection_requires_an_authentication_method():
+    with pytest.raises(SnowflakeConfigurationError) as error:
+        connection_parameters_from_env(
+            "loader",
+            {"SNOWFLAKE_ACCOUNT": "example-account", "SNOWFLAKE_USER": "example-user"},
+        )
+
+    message = str(error.value)
+    assert "SNOWFLAKE_PRIVATE_KEY_PATH" in message
     assert "SNOWFLAKE_PASSWORD" in message

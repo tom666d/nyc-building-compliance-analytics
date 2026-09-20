@@ -27,11 +27,31 @@ def connection_parameters_from_env(
         )
 
     values = os.environ if environ is None else environ
-    required = ("SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_PASSWORD")
+    required = ("SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER")
     missing = [name for name in required if not values.get(name, "").strip()]
     if missing:
         raise SnowflakeConfigurationError(
             "Missing required environment variables: " + ", ".join(missing)
+        )
+
+    password = values.get("SNOWFLAKE_PASSWORD", "")
+    private_key_path = values.get("SNOWFLAKE_PRIVATE_KEY_PATH", "").strip()
+    private_key_passphrase = values.get(
+        "SNOWFLAKE_PRIVATE_KEY_PASSPHRASE", ""
+    )
+    if password and private_key_path:
+        raise SnowflakeConfigurationError(
+            "Configure one authentication method, not both "
+            "SNOWFLAKE_PASSWORD and SNOWFLAKE_PRIVATE_KEY_PATH"
+        )
+    if not password and not private_key_path:
+        raise SnowflakeConfigurationError(
+            "Configure SNOWFLAKE_PRIVATE_KEY_PATH or SNOWFLAKE_PASSWORD"
+        )
+    if private_key_path and not private_key_passphrase:
+        raise SnowflakeConfigurationError(
+            "Missing required environment variable: "
+            "SNOWFLAKE_PRIVATE_KEY_PASSPHRASE"
         )
 
     role_variable, default_role, default_schema = WORKLOAD_SETTINGS[workload]
@@ -40,10 +60,9 @@ def connection_parameters_from_env(
         if workload == "transformer"
         else default_schema
     )
-    return {
+    parameters = {
         "account": values["SNOWFLAKE_ACCOUNT"].strip(),
         "user": values["SNOWFLAKE_USER"].strip(),
-        "password": values["SNOWFLAKE_PASSWORD"],
         "role": values.get(role_variable, default_role).strip() or default_role,
         "warehouse": values.get("SNOWFLAKE_WAREHOUSE", "NYC_DOB_WH").strip()
         or "NYC_DOB_WH",
@@ -51,6 +70,17 @@ def connection_parameters_from_env(
         or "NYC_DOB_ANALYTICS",
         "schema": schema,
     }
+    if private_key_path:
+        parameters.update(
+            {
+                "authenticator": "SNOWFLAKE_JWT",
+                "private_key_file": private_key_path,
+                "private_key_file_pwd": private_key_passphrase,
+            }
+        )
+    else:
+        parameters["password"] = password
+    return parameters
 
 
 def connection_from_env(workload: str):

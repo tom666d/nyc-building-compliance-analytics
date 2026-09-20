@@ -5,7 +5,9 @@ nyc_building_compliance:
       type: snowflake
       account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
       user: "{{ env_var('SNOWFLAKE_USER') }}"
-      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', '') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH', '') }}"
+      private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE', '') }}"
       role: "{{ env_var('SNOWFLAKE_DBT_ROLE', 'NYC_DOB_TRANSFORMER') }}"
       database: "{{ env_var('SNOWFLAKE_DATABASE', 'NYC_DOB_ANALYTICS') }}"
       warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'NYC_DOB_WH') }}"

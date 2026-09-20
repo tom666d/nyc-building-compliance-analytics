@@ -21,7 +21,8 @@ Step 4 已證明 Python 能從 NYC Open Data 取得真實資料。Step 5 的工�
 
 - 已完成：可執行的 Structured Query Language 腳本、角色與權限、warehouse、database、五個 schemas、三張 raw tables、resource monitor、自動測試、dbt schema 驗證與文件；
 - 已驗證：46 個 bootstrap statements 全部成功，三個專案 roles 均能切換並通過預期的 object access checks；
-- 尚未完成：本機 Python/dbt 的登入、真實資料載入，以及 dbt cloud build；
+- 後續已完成：key-pair Python/dbt 登入、三個 1,000-row 真實資料 samples，以及三個 staging views；
+- 尚未完成：完整來源載入、dimensional marts、orchestration 與 business intelligence layer；
 - 安全界線：account identifier、username、password 等本機設定不提交到 Git；
 - 證據界線：目前可以說「Snowflake foundation 已部署」，但不能說「pipeline 已載入資料」或「dbt marts 已建好」。
 
@@ -230,7 +231,7 @@ Metadata 是描述資料的資料。Raw table 除了 `raw_payload`，也保存�
 
 ### Environment variable 與 credentials
 
-Environment variable 是由執行環境提供給程式的設定值。Credentials 是用來驗證身分的資訊，例如 username 和 password。
+Environment variable 是由執行環境提供給程式的設定值。Credentials 是用來驗證身分的資訊，例如 username、private key 或 password。
 
 程式從 `.env` 讀取 credentials，但 Git 只保存不含秘密的 `.env.example`。這避免把秘密寫死在 source code。
 
@@ -239,13 +240,13 @@ Environment variable 是由執行環境提供給程式的設定值。Credentials
 - Authentication 回答「你是誰？」；
 - Authorization 回答「你能做什麼？」。
 
-Username/password 屬於 authentication；roles 和 privileges 屬於 authorization。成功登入不代表有權存取每一張 table。
+Key pair 或 username/password 屬於 authentication；roles 和 privileges 屬於 authorization。成功登入不代表有權存取每一張 table。
 
 ### Key-pair authentication
 
 Key-pair authentication 使用 private key 證明程式身分，避免自動化長期保存一般使用者 password。Private key 必須放在安全的 secret manager，不能提交到 repository。
 
-本步先保留適合學習與本機測試的 password connection；在持續整合和 orchestration 自動化之前，要改成組織批准的非互動式 authentication。
+Step 5.5 已建立加密的 PKCS#8 private key 與專用 service user。本機 Python 和 dbt 都已透過 key-pair authentication 驗證；password 只保留為程式相容性 fallback，沒有用於本專案的雲端載入。
 
 ### Idempotent
 
@@ -363,9 +364,9 @@ make snowflake-check
 - warehouse 為 extra-small，auto-suspend 是 60 秒，auto-resume 已開啟；
 - monthly resource monitor 已連接至 warehouse。
 
-`DEV_MARTS` 當時有 0 張 table，這不是錯誤：我們還沒有在雲端執行 dbt。Raw tables 也尚未載入 NYC 資料。雲端 objects 已存在，不等於整條 data pipeline 已完成。
+`DEV_MARTS` 目前仍有 0 張 table，因為 dimensional models 尚未執行。Step 5.5 後，三張 raw tables 已各載入 1,000 筆真實資料；Step 6 也已建立三個 staging views。
 
-本機 `make snowflake-check` 仍待設定本機 authentication。這項檢查將驗證 Python connector，而不是重複證明 Snowsight 中的 objects 是否存在。
+本機 `make snowflake-check` 已透過 service-user key pair 驗證 loader、transformer、reader，三個結果都是 `ready: true`。
 
 ## 知識點總結
 
@@ -423,7 +424,7 @@ The database, schemas, tables, roles, grants, warehouse settings, and resource m
 
 ### 8. Did you deploy this to Snowflake?
 
-Yes. I executed the version-controlled bootstrap in a Snowflake trial account and verified the database, five schemas, three raw tables, three least-privilege roles, warehouse settings, and resource monitor. The raw tables and marts were still empty at that milestone because ingestion and the first dbt build are separate steps. I document that boundary instead of presenting the whole pipeline as complete.
+Yes. I executed the version-controlled bootstrap in a Snowflake trial account and verified the database, five schemas, three raw tables, three least-privilege roles, warehouse settings, and resource monitor. I later authenticated through a dedicated key-pair service identity, loaded 1,000 real rows per source, and built the three staging views. Dimensional marts remain a separate milestone.
 
 ### 9. Why not use ACCOUNTADMIN for the pipeline?
 
@@ -431,7 +432,7 @@ ACCOUNTADMIN has account-wide power and should be restricted. The pipeline only 
 
 ### 10. How would you improve authentication before production automation?
 
-I would replace a long-lived password with an organization-approved non-interactive method such as key-pair authentication, store the private key and passphrase in the orchestration or continuous-integration secret manager, use a separate service identity, and rotate credentials according to policy.
+I already replaced human-password authentication with an encrypted private key and a dedicated service identity for local automation. For production, I would put the key and passphrase in the orchestration or continuous-integration secret manager, use a separate identity per workload where practical, and rotate named key pairs according to policy.
 
 ## 自我檢查
 
