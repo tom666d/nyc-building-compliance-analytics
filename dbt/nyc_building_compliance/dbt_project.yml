@@ -7,6 +7,9 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 clean-targets: ["target", "dbt_packages"]
 
+vars:
+  minimum_building_key_coverage_pct: 99.0
+
 models:
   nyc_building_compliance:
     staging:
@@ -18,3 +21,5 @@ models:
     marts:
       +materialized: table
       +schema: marts
+      quality:
+        +materialized: view

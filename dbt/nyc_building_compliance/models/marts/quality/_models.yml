@@ -1,0 +1,105 @@
+version: 2
+
+models:
+  - name: audit_data_quality_summary
+    description: >-
+      Current quality scorecard for the three event domains. It combines completeness,
+      status mapping, date validity, and source freshness without removing source records.
+    columns:
+      - name: measured_at
+        data_tests: [not_null]
+      - name: domain
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: ['permit_records', 'complaints', 'violations']
+      - name: total_record_count
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments: {expression: '> 0'}
+      - name: building_key_coverage_pct
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments: {expression: 'between 0 and 100'}
+      - name: source_last_ingested_at
+        data_tests: [not_null]
+      - name: source_age_hours
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments: {expression: '>= 0'}
+      - name: quality_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['PASS', 'WARN', 'ERROR']
+
+  - name: audit_unresolved_building_records
+    description: Event records that cannot be safely assigned to the conformed building dimension.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [domain, record_key]
+    columns:
+      - name: domain
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['permit_records', 'complaints', 'violations']
+      - name: record_key
+        data_tests: [not_null]
+      - name: quality_issue
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['MISSING_OR_INVALID_BIN', 'UNMATCHED_VALID_BIN']
+
+  - name: audit_date_anomalies
+    description: Source records with reversed lifecycle dates or an explicitly failed date parse.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [domain, record_key, quality_issue]
+    columns:
+      - name: domain
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['permit_records', 'complaints', 'violations']
+      - name: record_key
+        data_tests: [not_null]
+      - name: quality_issue
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - ISSUED_BEFORE_APPROVED
+                  - DISPOSITION_BEFORE_ENTERED
+                  - ISSUE_DATE_PARSE_FAILED
+
+  - name: audit_status_mapping_exceptions
+    description: Source statuses that have not been assigned to a governed analytical status group.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [domain, record_key]
+    columns:
+      - name: domain
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['permit_records', 'complaints', 'violations']
+      - name: record_key
+        data_tests: [not_null]
+      - name: source_status
+        data_tests: [not_null]

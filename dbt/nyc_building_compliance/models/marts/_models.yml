@@ -63,6 +63,9 @@ models:
               arguments:
                 to: ref('dim_buildings')
                 field: building_key
+          - not_null_proportion_at_least:
+              arguments:
+                minimum_proportion: 0.99
       - name: bin
         description: Source BIN retained so unmatched records remain diagnosable.
       - name: permit_status_group
@@ -96,6 +99,9 @@ models:
               arguments:
                 to: ref('dim_buildings')
                 field: building_key
+          - not_null_proportion_at_least:
+              arguments:
+                minimum_proportion: 0.99
       - name: complaint_status_group
         description: Governed analytical grouping of ACTIVE, CLOSED, and unexpected statuses.
         data_tests:
@@ -127,6 +133,9 @@ models:
               arguments:
                 to: ref('dim_buildings')
                 field: building_key
+          - not_null_proportion_at_least:
+              arguments:
+                minimum_proportion: 0.99
       - name: violation_status_group
         description: Governed category mapping used instead of inferring status from disposition date.
         data_tests:

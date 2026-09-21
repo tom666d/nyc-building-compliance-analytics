@@ -12,7 +12,28 @@ sources:
     tables:
       - name: permits
         identifier: raw_dob_now_permits
+        columns:
+          - name: source_row_hash
+            data_tests: [not_null]
+          - name: load_id
+            data_tests: [not_null]
+          - name: ingested_at
+            data_tests: [not_null]
       - name: complaints
         identifier: raw_dob_complaints
+        columns:
+          - name: source_row_hash
+            data_tests: [not_null]
+          - name: load_id
+            data_tests: [not_null]
+          - name: ingested_at
+            data_tests: [not_null]
       - name: violations
         identifier: raw_dob_violations
+        columns:
+          - name: source_row_hash
+            data_tests: [not_null]
+          - name: load_id
+            data_tests: [not_null]
+          - name: ingested_at
+            data_tests: [not_null]

@@ -1,4 +1,4 @@
-.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-docs
+.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs
 
 install:
 	python3 -m venv .venv
@@ -34,6 +34,9 @@ dbt-parse:
 
 dbt-build:
 	.venv/bin/dotenv run -- .venv/bin/dbt build --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+
+dbt-freshness:
+	.venv/bin/dotenv run -- .venv/bin/dbt source freshness --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-docs:
 	.venv/bin/dotenv run -- .venv/bin/dbt docs generate --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance

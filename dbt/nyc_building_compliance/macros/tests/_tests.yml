@@ -1,0 +1,14 @@
+version: 2
+
+macros:
+  - name: test_not_null_proportion_at_least
+    description: >-
+      Fails when a model is empty or when the proportion of non-null values in a column
+      falls below a declared minimum. Used for measurable foreign-key coverage contracts.
+    arguments:
+      - name: model
+        description: Model evaluated by the data test.
+      - name: column_name
+        description: Column whose non-null coverage is measured.
+      - name: minimum_proportion
+        description: Required fraction from 0 through 1, such as 0.99 for 99 percent.

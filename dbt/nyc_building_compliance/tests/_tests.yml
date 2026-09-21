@@ -1,0 +1,16 @@
+version: 2
+
+data_tests:
+  - name: assert_current_snapshot_reconciles
+    description: >-
+      Fails when the current building snapshot totals do not reconcile to the independently
+      calculated event facts and building dimension.
+  - name: assert_status_flags_consistent
+    description: Fails when a boolean status flag contradicts its governed status group.
+  - name: assert_no_reversed_event_dates
+    description: Fails when an issued or disposition date occurs before its lifecycle start date.
+  - name: assert_no_unmapped_statuses
+    description: >-
+      Fails when a new source status reaches a fact without a governed analytical mapping.
+  - name: assert_quality_summary_complete
+    description: Fails unless the quality scorecard contains exactly the three Phase 1 domains.
