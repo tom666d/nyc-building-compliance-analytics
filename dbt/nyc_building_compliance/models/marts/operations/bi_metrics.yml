@@ -10,7 +10,7 @@ exposures:
       - ref('fct_building_compliance_daily')
       - ref('fct_complaints')
       - ref('fct_violations')
-      - ref('fct_permits')
+      - ref('fct_permit_records')
     owner:
       name: Portfolio Owner
       email: replace-me@example.com

@@ -2,61 +2,190 @@ version: 2
 
 models:
   - name: dim_buildings
-    description: One row per validated NYC Building Identification Number (BIN).
+    description: >-
+      Type 1 conformed building dimension with one row per validated NYC Building
+      Identification Number (BIN). The most complete observed source row supplies the
+      current descriptive attributes; historical attribute changes are not retained.
     columns:
       - name: building_key
-        description: Warehouse surrogate key derived from BIN.
-        tests: [not_null, unique]
+        description: Stable warehouse surrogate key generated from BIN.
+        data_tests: [not_null, unique]
       - name: bin
-        description: Seven-digit NYC Building Identification Number.
-        tests: [not_null, unique]
+        description: Seven-digit NYC Building Identification Number and business key.
+        data_tests:
+          - not_null
+          - unique
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "regexp '^[0-9]{7}$'"
+      - name: bbl
+        description: Validated ten-digit Borough-Block-Lot identifier when observed.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "regexp '^[0-9]{10}$'"
+      - name: borough
+        description: Canonical NYC borough name.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['MANHATTAN', 'BRONX', 'BROOKLYN', 'QUEENS', 'STATEN ISLAND']
+      - name: selected_attribute_source
+        description: Source selected to provide the dimension's current descriptive values.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['permit', 'complaint', 'violation']
+      - name: observed_source_count
+        description: Number of the three Phase 1 source systems in which this BIN was observed.
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: 'between 1 and 3'
 
-  - name: fct_permits
-    description: One row per DOB NOW work permit sequence.
+  - name: fct_permit_records
+    description: >-
+      One row per distinct DOB NOW approved-permit source payload. This is deliberately a
+      source-record fact, not a claim that each row represents one unique real-world permit.
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('stg_dob_now_permits')
     columns:
       - name: permit_key
-        tests: [not_null, unique]
+        description: Content-based technical key inherited from the staging source-row hash.
+        data_tests: [not_null, unique]
       - name: building_key
-        tests:
+        description: Nullable foreign key to the conformed building dimension.
+        data_tests:
           - relationships:
-              to: ref('dim_buildings')
-              field: building_key
+              arguments:
+                to: ref('dim_buildings')
+                field: building_key
+      - name: bin
+        description: Source BIN retained so unmatched records remain diagnosable.
+      - name: permit_status_group
+        description: Governed analytical grouping of the source permit status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['ISSUED', 'SIGNED_OFF', 'UNKNOWN']
+      - name: is_issued_record
+        description: True when the source record is in the PERMIT ISSUED state.
+        data_tests: [not_null]
+      - name: is_status_unmapped
+        description: True when the source status is not in the current governed mapping.
+        data_tests: [not_null]
 
   - name: fct_complaints
     description: One row per DOB complaint, using the latest ingested source state.
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('stg_dob_complaints')
     columns:
       - name: complaint_key
-        tests: [not_null, unique]
+        description: Complaint number used as the source business key.
+        data_tests: [not_null, unique]
       - name: building_key
-        tests:
+        description: Nullable foreign key to the conformed building dimension.
+        data_tests:
           - relationships:
-              to: ref('dim_buildings')
-              field: building_key
+              arguments:
+                to: ref('dim_buildings')
+                field: building_key
+      - name: complaint_status_group
+        description: Governed analytical grouping of ACTIVE, CLOSED, and unexpected statuses.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['ACTIVE', 'RESOLVED', 'UNKNOWN']
       - name: is_open
-        tests: [not_null]
+        description: True only when complaint_status_group is ACTIVE.
+        data_tests: [not_null]
+      - name: is_status_unmapped
+        description: True when the source status is not in the current governed mapping.
+        data_tests: [not_null]
 
   - name: fct_violations
-    description: One row per legacy BIS DOB violation record.
+    description: One row per latest legacy Building Information System DOB violation record.
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('stg_dob_violations')
     columns:
       - name: violation_key
-        tests: [not_null, unique]
+        description: Source ISN DOB BIS violation identifier.
+        data_tests: [not_null, unique]
       - name: building_key
-        tests:
+        description: Nullable foreign key to the conformed building dimension.
+        data_tests:
           - relationships:
-              to: ref('dim_buildings')
-              field: building_key
+              arguments:
+                to: ref('dim_buildings')
+                field: building_key
+      - name: violation_status_group
+        description: Governed category mapping used instead of inferring status from disposition date.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['ACTIVE', 'RESOLVED', 'DISMISSED', 'UNKNOWN']
+      - name: is_open
+        description: True only when violation_status_group is ACTIVE.
+        data_tests: [not_null]
+      - name: is_status_unmapped
+        description: True for source categories without an explicit active/resolved/dismissed label.
+        data_tests: [not_null]
 
   - name: fct_building_compliance_daily
-    description: BI-ready current daily snapshot at building and snapshot-date grain.
-    tests:
+    description: >-
+      BI-ready incremental snapshot with one row per building and snapshot date. A same-day
+      rerun updates that date; the first run on a later date adds a new historical partition.
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [snapshot_date, building_key]
+          arguments:
+            combination_of_columns: [snapshot_date, building_key]
     columns:
       - name: snapshot_date
-        tests: [not_null]
+        description: Snowflake calendar date on which the snapshot was built.
+        data_tests: [not_null]
       - name: building_key
-        tests:
+        description: Foreign key to the conformed building dimension.
+        data_tests:
           - not_null
           - relationships:
-              to: ref('dim_buildings')
-              field: building_key
+              arguments:
+                to: ref('dim_buildings')
+                field: building_key
+      - name: open_complaint_count
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments: {expression: '>= 0'}
+      - name: open_violation_count
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments: {expression: '>= 0'}
+      - name: active_permit_record_count
+        description: >-
+          Count of issued source records not expired on snapshot_date; not a unique permit count.
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments: {expression: '>= 0'}
+      - name: complaints_last_30_days
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments: {expression: '>= 0'}
+      - name: unmapped_complaint_status_count
+        data_tests: [not_null]
+      - name: unmapped_violation_status_count
+        data_tests: [not_null]
+      - name: unmapped_permit_status_count
+        data_tests: [not_null]
