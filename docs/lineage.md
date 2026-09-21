@@ -30,10 +30,17 @@ flowchart LR
     FC --> S
     FV --> S
 
-    S --> E1{{building_compliance_360}}
+    S --> MB[mart_building_compliance_current]
+    MB --> MR[mart_borough_compliance_current]
+    MB --> MO[mart_compliance_overview]
+    MB --> E1{{building_compliance_360}}
+    MR --> E1
+    MO --> E1
     FP --> E1
     FC --> E1
     FV --> E1
+    E1 --> J[validated JSON snapshot]
+    J --> W[dashboard]
 
     FP --> Q[quality audit views]
     FC --> Q
@@ -57,13 +64,18 @@ Graph and its generated lineage view.
 | `fct_complaints` | One row per complaint using the latest ingested state | Complaint operations and drill-through | `building_compliance_360` |
 | `fct_violations` | One row per latest legacy violation record | Compliance operations and drill-through | `building_compliance_360` |
 | `fct_building_compliance_daily` | One row per building and snapshot date | Business intelligence summary | `building_compliance_360` |
+| `mart_building_compliance_current` | One building in the latest snapshot | Review queue and drill-through | `building_compliance_360` |
+| `mart_borough_compliance_current` | One borough in the latest snapshot | Workload comparison | `building_compliance_360` |
+| `mart_compliance_overview` | One latest-snapshot overview | Executive metrics | `building_compliance_360` |
 | Four `audit_*` views | One scorecard row per domain or one row per exception | Pipeline operators and analysts | `data_quality_monitoring` |
 
-An exposure documents a use of the data beyond dbt. `building_compliance_360` is the
-planned business intelligence product. `data_quality_monitoring` makes the operational
-scorecard and record-level investigation views visible as a separate consumer path.
-Neither exposure contains a fabricated URL; a real URL will be added only after the
-business intelligence layer exists.
+An exposure documents a use of the data beyond dbt. `building_compliance_360` now represents the
+implemented business intelligence product and depends on the three dedicated consumption marts
+plus drill-through facts. `data_quality_monitoring` makes the operational scorecard and
+record-level investigation views visible as a separate consumer path. A deployment URL is added
+only after the site is successfully published; no placeholder URL is used. The current dbt
+exposure points to the owner-private
+[deployed dashboard](https://nyc-building-compliance-360-portfolio.hsieh203.chatgpt.site).
 
 ## Documentation layers
 
@@ -137,6 +149,11 @@ zero warnings, and zero errors. A regenerated Snowflake catalog confirmed that a
 published relations had relation comments and all 118 published columns had column
 comments.
 
+On 2026-09-21, the selected consumption graph created three additional tables and passed 18 data
+tests, for 21 passing executable nodes and one exposure no-op. The post-`0000000` normalization
+rebuild remains pending the resource-monitor reset; that distinction is documented in the
+dashboard rather than hidden.
+
 ## Using lineage for impact analysis
 
 Before changing a model, inspect its downstream graph. For example, changing the permit
@@ -167,8 +184,8 @@ make dbt-docs-check  # Generate docs and enforce documentation coverage
 
 - Model-level lineage is generated from dbt dependencies. Full column-level lineage is not
   claimed by this dbt Core 1.12 implementation.
-- Exposure URLs are intentionally absent until a real business intelligence artifact is
-  deployed.
+- The dashboard uses a versioned static snapshot. Lineage proves declared dependencies, not live
+  synchronization between a page view and Snowflake.
 - Coverage verifies that descriptions exist and match physical columns; human review must
   still judge whether the wording is accurate and useful.
 - The current catalog represents the bounded portfolio sample and development schemas, not

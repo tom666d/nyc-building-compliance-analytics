@@ -16,6 +16,6 @@
 10. ✅ [Step 9：建立文件與資料血緣](step-09-documentation-and-lineage.md)
 11. ✅ [Step 10：使用 Apache Airflow 自動執行資料管線](step-10-airflow-orchestration.md)
 12. ✅ [Step 11：使用 GitHub Actions 建立持續整合](step-11-github-continuous-integration.md)
-13. Step 12：建立商業智慧消費層與面試展示
+13. ✅ [Step 12：建立商業智慧消費層與面試展示](step-12-bi-consumption-layer.md)
 
 完成一個步驟不代表只寫完程式，而是要能用自己的話說明：問題、選擇、結果與限制。

@@ -24,8 +24,11 @@ The `CI` workflow runs on a GitHub-hosted Ubuntu runner and enforces:
 3. Python unit tests;
 4. installed Python dependency consistency;
 5. dbt package resolution;
-6. dbt graph parsing without a warehouse connection; and
-7. Airflow Dag import and structural contracts.
+6. dbt graph parsing without a warehouse connection;
+7. Airflow Dag import and structural contracts;
+8. locked Node.js dependency installation;
+9. production website dependency auditing; and
+10. dashboard snapshot validation, linting, and optimized build.
 
 Placeholder connection values allow dbt to parse the profile. They are intentionally invalid,
 contain no secrets, and are never used to open a Snowflake connection. The local equivalent is:
@@ -104,8 +107,8 @@ equivalent to independent approval.
 
 ## Supply-chain and maintenance controls
 
-External actions execute code inside the job. Both `actions/checkout` and
-`actions/setup-python` are therefore pinned to immutable full commit SHAs, with a comment showing
+External actions execute code inside the job. `actions/checkout`, `actions/setup-python`, and
+`actions/setup-node` are therefore pinned to immutable full commit SHAs, with a comment showing
 the human-readable release. `persist-credentials: false` prevents the checkout step from leaving
 its Git credential available to later commands.
 
@@ -140,6 +143,9 @@ dbt dependency resolution           passed
 dbt parse without Snowflake          passed
 Airflow nine-task Dag contract      passed
 Airflow dependency consistency      passed
+Dashboard production audit          passed, zero known runtime vulnerabilities
+Dashboard snapshot contract         passed
+Dashboard lint and build            passed
 ```
 
 This verifies repository behavior on the local machine. It does not prove that a GitHub-hosted
@@ -153,6 +159,8 @@ remote repository is created and the resulting run URL can be recorded.
   a dedicated CI role and isolated per-change schema before enabling automatic warehouse tests.
 - Key-pair secrets are long-lived compared with identity federation. Rotation is still required.
 - Python dependencies use compatible version ranges rather than a complete transitive lock file.
+- The website has a reproducible package lock, but development-only package audit findings may
+  remain even when the deployable production dependency audit is clean.
 - Static CI parses dbt and Airflow structure but cannot detect failures that require live source
   APIs or Snowflake behavior.
 - Continuous deployment is not implemented. A passing check does not publish a production release.

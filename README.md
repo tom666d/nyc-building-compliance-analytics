@@ -11,7 +11,13 @@ Operations and compliance users should be able to answer, without reconciling mu
 - How long do permits and complaints take to move through their lifecycles?
 - Which definitions power each KPI, and when was the source last refreshed?
 
-The first product is `fct_building_compliance_daily`, a daily building snapshot designed for BI. Event-level facts remain available for drill-through.
+Owner-private live preview: [NYC Building Compliance 360](https://nyc-building-compliance-360-portfolio.hsieh203.chatgpt.site).
+The audience remains private until an explicit sharing decision is made.
+
+The governed analytical foundation is `fct_building_compliance_daily`, a daily building
+snapshot designed for business intelligence. Three consumption marts turn that foundation into
+an overview, borough comparison, and building review queue, while event-level facts remain
+available for drill-through.
 
 ## Architecture
 
@@ -24,7 +30,10 @@ Python ingestion -> Snowflake RAW (JSON + ingestion metadata)
         v
 dbt staging -> conformed intermediate models -> dimensional marts
         |                         |             |
-        +-> tests, docs, lineage  +-> quality   +-> BI semantic layer
+        +-> tests, docs, lineage  +-> quality   +-> consumption marts
+                                                        |
+                                                        v
+                                          validated JSON snapshot -> dashboard
 
 Airflow schedules ingestion + dbt; GitHub Actions validates every change.
 ```
@@ -48,6 +57,10 @@ Airflow schedules ingestion + dbt; GitHub Actions validates every change.
 15. Execute a bounded live integration run: `make airflow-test-dag`.
 16. Start the local Airflow interface when needed: `make airflow-standalone`.
 17. Run the complete credential-free CI equivalent locally: `make ci-local`.
+18. Install the locked dashboard dependencies: `make dashboard-install`.
+19. Validate the dashboard data contract, production packages, lint, and build: `make dashboard-check`.
+20. Start the local dashboard: `make dashboard-dev`.
+21. When Snowflake capacity is available, refresh the snapshot: `make dashboard-export`.
 
 The ingestion CLI and Airflow Dag default to bounded samples so a reviewer can run them
 cheaply. Pagination is implemented; validated incremental date watermarks and late-arriving
@@ -68,6 +81,7 @@ record handling remain explicit production follow-up work.
 - [Step 9：建立文件與資料血緣](docs/learning/step-09-documentation-and-lineage.md)
 - [Step 10：使用 Apache Airflow 自動執行資料管線](docs/learning/step-10-airflow-orchestration.md)
 - [Step 11：使用 GitHub Actions 建立持續整合](docs/learning/step-11-github-continuous-integration.md)
+- [Step 12：建立商業智慧消費層與面試展示](docs/learning/step-12-bi-consumption-layer.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Point-in-time source profile](docs/source_profile.md)
@@ -81,6 +95,7 @@ record handling remain explicit production follow-up work.
 - [Documentation, exposures, and end-to-end lineage](docs/lineage.md)
 - [Airflow orchestration, retry safety, and verified evidence](docs/orchestration.md)
 - [Continuous integration boundaries and local evidence](docs/continuous_integration.md)
+- [Business intelligence consumption layer](docs/bi_consumption.md)
 - [Architecture decision records](docs/decisions/)
 - Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton
 
@@ -102,5 +117,11 @@ and all 15 physical source columns; relation and column descriptions were persis
 Snowflake for every published mart. Airflow remains paused by default, and the current
 bounded extraction is not presented as a full production incremental strategy. Credential-free
 continuous integration now validates Python, dbt parsing, the nine-task Airflow contract, and
-workflow security policy; its full local equivalent passed with 25 Python tests on 2026-09-21.
+workflow security policy. Step 12 adds three governed consumption marts and a responsive dashboard
+whose checked-in snapshot is explicitly limited to 1,000 records from each source. The first live
+consumption build created all three marts and passed 18 selected data tests. Dashboard review then
+found and removed the source placeholder `0000000` from building identity; the corrected local
+snapshot is validated, while the corresponding Snowflake rebuild remains pending the resource
+monitor reset. The credential-free local suite now also audits production website dependencies,
+validates dashboard rollups, lints the application, and produces an optimized build.
 The repository has no GitHub remote yet, so no hosted run or branch-protection claim is made.
