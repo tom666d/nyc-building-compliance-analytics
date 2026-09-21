@@ -1,0 +1,133 @@
+version: 2
+
+models:
+  - name: mart_building_compliance_current
+    description: >-
+      Current BI consumption view with one row per observed building from the latest available
+      daily snapshot. The attention score prioritizes workload for review; it is not a legal,
+      structural-safety, or regulatory severity determination.
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('dim_buildings')
+    columns:
+      - name: snapshot_date
+        description: Latest available daily compliance snapshot date.
+        data_tests: [not_null]
+      - name: building_key
+        description: Stable warehouse surrogate key for the conformed building.
+        data_tests: [not_null, unique]
+      - name: bin
+        description: Validated seven-digit NYC Building Identification Number.
+        data_tests: [not_null, unique]
+      - name: bbl
+        description: Validated ten-digit Borough-Block-Lot identifier when observed.
+      - name: borough
+        description: Canonical NYC borough name.
+        data_tests: [not_null]
+      - name: display_address
+        description: Best available display address selected by the building dimension.
+      - name: observed_source_count
+        description: Number of the three Phase 1 source systems in which the building was observed.
+      - name: open_complaint_count
+        description: Complaint records currently mapped to ACTIVE for the building.
+      - name: open_violation_count
+        description: Legacy violation records currently mapped to ACTIVE for the building.
+      - name: active_permit_record_count
+        description: Issued permit source records that had not expired on the snapshot date.
+      - name: total_open_compliance_item_count
+        description: Sum of open complaint and open violation records for workload prioritization.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments: {expression: '= open_complaint_count + open_violation_count'}
+      - name: complaints_last_30_days
+        description: Complaints entered during the 30 days ending on the snapshot date.
+      - name: oldest_open_item_date
+        description: Earliest observed date among currently open complaint and violation records.
+      - name: latest_permit_issued_date
+        description: Most recent issued date among the building's retained permit source records.
+      - name: status_mapping_exception_count
+        description: Records for the building whose source status lacks a governed mapping.
+      - name: has_complaint_history
+        description: True when the building has at least one retained complaint record.
+      - name: has_violation_history
+        description: True when the building has at least one retained violation record.
+      - name: has_permit_history
+        description: True when the building has at least one retained permit source record.
+      - name: oldest_open_item_age_days
+        description: Nonnegative calendar age of the oldest open item as of the snapshot date.
+      - name: attention_score
+        description: >-
+          Transparent zero-to-100 workload score using open complaints, open violations, recent
+          complaints, and an age bonus. It prioritizes review and does not measure structural risk.
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments: {expression: 'between 0 and 100'}
+      - name: attention_tier
+        description: Work-queue tier derived from attention_score using documented fixed thresholds.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['LOW', 'MODERATE', 'HIGH', 'CRITICAL']
+
+  - name: mart_borough_compliance_current
+    description: Current borough-level workload metrics for the dashboard comparison view.
+    columns:
+      - name: snapshot_date
+        description: Latest available daily compliance snapshot date.
+        data_tests: [not_null]
+      - name: borough
+        description: Canonical NYC borough name and row grain.
+        data_tests: [not_null, unique]
+      - name: observed_building_count
+        description: Buildings observed in the bounded portfolio source slice for the borough.
+      - name: building_with_open_item_count
+        description: Observed buildings with at least one open complaint or violation record.
+      - name: priority_building_count
+        description: Buildings assigned a HIGH or CRITICAL workload attention tier.
+      - name: priority_building_rate_pct
+        description: Percentage of observed borough buildings assigned HIGH or CRITICAL.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments: {expression: 'between 0 and 100'}
+      - name: open_complaint_count
+        description: Current open complaint records across observed borough buildings.
+      - name: open_violation_count
+        description: Current open violation records across observed borough buildings.
+      - name: active_permit_record_count
+        description: Current active permit source records across observed borough buildings.
+      - name: total_open_compliance_item_count
+        description: Sum of open complaint and violation records across the borough.
+      - name: highest_attention_score
+        description: Highest current building attention score observed in the borough.
+
+  - name: mart_compliance_overview
+    description: One-row current executive summary for the Building Compliance 360 dashboard.
+    columns:
+      - name: snapshot_date
+        description: Latest available daily compliance snapshot date and row grain.
+        data_tests: [not_null, unique]
+      - name: observed_building_count
+        description: Buildings represented by the bounded portfolio source slice.
+      - name: building_with_open_item_count
+        description: Observed buildings with at least one open complaint or violation record.
+      - name: priority_building_count
+        description: Buildings assigned a HIGH or CRITICAL workload attention tier.
+      - name: open_complaint_count
+        description: Current open complaint records across observed buildings.
+      - name: open_violation_count
+        description: Current open violation records across observed buildings.
+      - name: active_permit_record_count
+        description: Current active permit source records across observed buildings.
+      - name: total_open_compliance_item_count
+        description: Sum of current open complaint and violation records.
+      - name: highest_attention_score
+        description: Highest current building attention score in the observed sample.
+      - name: median_complaint_resolution_days_12m
+        description: >-
+          Median valid resolution days for complaint records disposed during the 365 days ending
+          on snapshot_date; null when the bounded sample contains no qualifying records.
+      - name: resolved_complaint_count_12m
+        description: Records contributing to the trailing-365-day resolution metric.

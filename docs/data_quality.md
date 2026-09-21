@@ -6,7 +6,7 @@ Phase 1 separates blocking warehouse contracts from visible source-data exceptio
 
 | Quality dimension | Blocking contract | Visible audit behavior |
 |---|---|---|
-| Completeness | raw ingestion metadata is non-null; building-key coverage stays at or above 99% | unresolved records remain queryable with a reason |
+| Completeness | raw ingestion metadata is non-null; permit and complaint coverage stays at or above 99%, while legacy violations use a documented 98% blocking floor | the scorecard retains a 99% desired threshold and unresolved records remain queryable with a reason |
 | Uniqueness | declared fact and dimension keys remain unique | exact source duplicates are handled in staging |
 | Validity | identifiers and governed status groups remain in accepted domains | source date parse failures retain the original value |
 | Referential integrity | every non-null fact building key exists in `dim_buildings` | records without a defensible building key stay in the event fact |
@@ -35,7 +35,12 @@ An audit `WARN` does not make the dbt command fail. It distinguishes a known, me
 
 ## Reusable and singular tests
 
-`not_null_proportion_at_least` is a project-owned generic data test. It fails when a model is empty or a declared column falls below the requested non-null proportion. Each event fact applies it to `building_key` with a minimum of 0.99.
+`not_null_proportion_at_least` is a project-owned generic data test. It fails when a model is
+empty or a declared column falls below the requested non-null proportion. Permit and complaint
+facts require 0.99. The legacy violation fact uses a 0.98 blocking floor after dashboard profiling
+found eleven records grouped under an unusable all-zero BIN. The audit scorecard still marks
+coverage below 99% as `ERROR`; ADR 0012 records why the blocking and observability thresholds now
+differ for this source.
 
 Project-specific singular tests verify:
 
@@ -74,6 +79,13 @@ Current scorecard:
 
 The violation detail views contain two missing/invalid BIN records and two issue-date parse failures. Status-mapping exceptions contain zero rows. Reader-role access to the scorecard was also verified.
 
+Step 12 dashboard profiling subsequently found that `0000000` had passed the original seven-digit
+syntax check and grouped eleven additional legacy violations under a false building. The revised
+normalization requires borough code one through five and rejects borough-zero placeholders. That
+change projects legacy violation building-key coverage to 98.70% and removes the pseudo-building
+from consumption metrics. A post-correction Snowflake rebuild is pending the monthly resource
+monitor reset, so the table above remains the last fully verified pre-correction scorecard.
+
 ## Commands
 
 ```text
@@ -91,3 +103,4 @@ make dbt-docs
 - Audit views show current state rather than historical quality trends.
 - Notification delivery is deferred to orchestration and monitoring work.
 - Source exceptions are analytical signals, not official Department of Buildings corrections.
+- The post-zero-BIN normalization state is parsed and snapshot-reconciled locally but not yet rebuilt in Snowflake because the configured resource monitor has reached its monthly quota.

@@ -3,12 +3,15 @@ version: 2
 exposures:
   - name: building_compliance_360
     type: dashboard
-    maturity: low
+    maturity: medium
+    url: https://nyc-building-compliance-360-portfolio.hsieh203.chatgpt.site
     description: >-
-      Planned business intelligence dashboard for prioritizing building-level compliance
+      Implemented business intelligence dashboard for prioritizing building-level compliance
       workload and drilling from daily metrics into permit, complaint, and violation records.
     depends_on:
-      - ref('fct_building_compliance_daily')
+      - ref('mart_compliance_overview')
+      - ref('mart_borough_compliance_current')
+      - ref('mart_building_compliance_current')
       - ref('fct_complaints')
       - ref('fct_violations')
       - ref('fct_permit_records')

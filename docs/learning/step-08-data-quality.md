@@ -248,7 +248,7 @@ if populated proportion < required minimum -> fail
 otherwise -> pass
 ```
 
-三個 fact models 都設定：
+Step 8 當時三個 fact models 都設定：
 
 ```text
 building_key coverage >= 0.99
@@ -267,6 +267,12 @@ building_key coverage >= 0.99
 為什麼不是 90%？因為 building-level product 若有 10% records 無法對應 building，會嚴重低估某些 properties 的 workload。
 
 99% 是 Phase 1 hypothesis，完整資料 baseline 建立後仍需要重新評估。
+
+Step 12 建立 dashboard 時，進一步發現 legacy violations 有 11 筆使用 `0000000`，
+原本的七位數 syntax test 錯把它當成 building。修正後 permits 與 complaints 仍使用
+99% blocking threshold；legacy violations 使用 98% blocking floor，但 audit scorecard
+仍以 99% 作為 desired threshold，低於 99% 會顯示 `ERROR`。這不是偷偷降低品質標準，
+而是把「是否允許保留來源缺陷」與「是否對使用者顯示品質不足」分成兩個控制。
 
 ## Step 8.4：建立 cross-model singular tests
 

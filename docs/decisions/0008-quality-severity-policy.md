@@ -2,6 +2,10 @@
 
 Status: accepted
 
+Amendment: ADR 0012 supersedes the uniform 99-percent blocking threshold for the legacy
+violation fact after dashboard profiling exposed additional all-zero placeholder BIN records.
+The quality scorecard continues to use 99 percent as the desired threshold.
+
 ## Context
 
 Real source data contains valid operational ambiguity and known defects. The bounded sample includes two legacy violations without a usable Building Identification Number and two malformed issue dates. Failing every pipeline run on those known source records would make tests noisy; silently excluding them would hide material coverage limitations.

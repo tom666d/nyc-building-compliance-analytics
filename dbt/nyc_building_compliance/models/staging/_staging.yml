@@ -13,7 +13,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "regexp '^[0-9]{7}$'"
+                expression: "regexp '^[1-5][0-9]{6}$' and bin not regexp '^[1-5]0{6}$'"
       - name: borough
         data_tests:
           - accepted_values:
@@ -26,6 +26,11 @@ models:
         data_tests: [not_null, unique]
       - name: complaint_number
         data_tests: [not_null]
+      - name: bin
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "regexp '^[1-5][0-9]{6}$' and bin not regexp '^[1-5]0{6}$'"
       - name: borough
         data_tests:
           - accepted_values:
@@ -38,6 +43,11 @@ models:
         data_tests: [not_null, unique]
       - name: source_violation_id
         data_tests: [not_null]
+      - name: bin
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "regexp '^[1-5][0-9]{6}$' and bin not regexp '^[1-5]0{6}$'"
       - name: issue_date_parse_failed
         description: True when a non-null source issue date fails the documented YYYYMMDD rule.
         data_tests: [not_null]
