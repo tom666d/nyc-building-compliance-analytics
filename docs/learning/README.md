@@ -11,7 +11,7 @@
 5. ✅ [Step 5：建立 Snowflake 資料倉儲基礎](step-05-snowflake-foundation.md)
 6. ✅ [Step 5.5：安全連線與第一次 Snowflake 真實資料載入](step-05-5-secure-connection-and-first-load.md)
 7. ✅ [Step 6：使用 dbt 建立 staging models](step-06-dbt-staging-models.md)
-8. Step 7：建立事實表、維度表與每日快照
+8. ✅ [Step 7：建立事實表、維度表與每日快照](step-07-dimensional-models.md)
 9. Step 8：加入資料品質測試
 10. Step 9：建立文件與資料血緣
 11. Step 10：使用 Apache Airflow 自動執行

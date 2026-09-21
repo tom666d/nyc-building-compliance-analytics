@@ -16,3 +16,7 @@ Do not treat the current permit fact as production-ready. Preserve distinct sour
 - The current staging scaffold must be revised before the first warehouse build.
 - A likely design is a permit-issuance fact plus a permit-to-work-type bridge, but this remains a hypothesis until broader profiling confirms it.
 - The discovered exception becomes a documented design decision rather than hidden cleanup logic.
+
+## Step 7 implementation outcome
+
+The released Phase 1 model is named `fct_permit_records`, not `fct_permits`. Its declared grain is one distinct source payload keyed by the canonical row hash. This supports building-level permit activity analysis without overstating the row as a unique real-world permit. A future permit-issuance fact and work-type bridge remain deferred until their business keys are validated.

@@ -71,7 +71,7 @@
 |---|---|---|---|
 | Department of Buildings operations manager | 哪些案件或建築應優先檢查或處理？ | 未結投訴、未結違規、案件年齡 | `fct_complaints`、`fct_violations` |
 | Property compliance manager | 哪些物業需要後續行動？ | 建築層級的未結項目與近期活動 | `fct_building_compliance_daily` |
-| Construction program manager | 許可流程在哪裡變慢？ | 核准到發照天數、狀態與到期日 | `fct_permits` |
+| Construction program manager | 許可流程在哪裡變慢？ | 核准到發照天數、狀態與到期日 | `fct_permit_records` |
 | Real-estate risk analyst | 哪些物業需要更深入的人工盡職調查？ | 可解釋的合規活動與資料涵蓋標記 | building daily snapshot 與明細 facts |
 | Analytics team | 如何避免每份報告重新定義指標？ | 受測試、受文件化、可重複使用的模型 | 全部 analytics marts |
 

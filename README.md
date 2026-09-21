@@ -54,6 +54,7 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Step 5：建立 Snowflake 資料倉儲基礎](docs/learning/step-05-snowflake-foundation.md)
 - [Step 5.5：安全連線與第一次 Snowflake 真實資料載入](docs/learning/step-05-5-secure-connection-and-first-load.md)
 - [Step 6：使用 dbt 建立 staging models](docs/learning/step-06-dbt-staging-models.md)
+- [Step 7：建立事實表、維度表與每日快照](docs/learning/step-07-dimensional-models.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Point-in-time source profile](docs/source_profile.md)
@@ -74,4 +75,4 @@ Decisions are recorded before implementation in `docs/decisions`. Suggested mile
 
 Phase 1 models DOB NOW approved permits, DOB complaints, and legacy BIS DOB violations. DOB NOW Safety Violations is deliberately deferred until a cross-system deduplication rule is profiled and validated. This limitation is visible rather than hidden.
 
-The Snowflake foundation, key-pair service authentication, a bounded 3,000-row real-data load, and the three dbt staging views were verified in a real trial account on 2026-09-20. Dimensional marts remain an upcoming milestone.
+The Snowflake foundation, key-pair service authentication, a bounded 3,000-row real-data load, three staging views, one conformed building dimension, three event facts, and an incremental daily snapshot were verified in a real trial account on 2026-09-20. The dimensional build completed with zero warnings and zero errors; the same-day snapshot rerun also preserved its compound grain.

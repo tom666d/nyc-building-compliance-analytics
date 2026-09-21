@@ -210,7 +210,7 @@ job filing number
 
 這代表：
 
-- 目前不能宣稱 `fct_permits` 已有正確的 business grain；
+- 目前不能建立或宣稱一張以 unique permit 為 grain 的 `fct_permits`；
 - 不能用 `row_number()` 隨意保留其中一列，因為可能丟掉真的 work type；
 - 下一步需要評估「permit issuance fact + permit-to-work-type bridge」設計；
 - 在確認以前，只能安全移除完全相同的 payload。

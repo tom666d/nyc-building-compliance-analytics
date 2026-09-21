@@ -424,7 +424,7 @@ The database, schemas, tables, roles, grants, warehouse settings, and resource m
 
 ### 8. Did you deploy this to Snowflake?
 
-Yes. I executed the version-controlled bootstrap in a Snowflake trial account and verified the database, five schemas, three raw tables, three least-privilege roles, warehouse settings, and resource monitor. I later authenticated through a dedicated key-pair service identity, loaded 1,000 real rows per source, and built the three staging views. Dimensional marts remain a separate milestone.
+Yes. I executed the version-controlled bootstrap in a Snowflake trial account and verified the database, five schemas, three raw tables, three least-privilege roles, warehouse settings, and resource monitor. I later authenticated through a dedicated key-pair service identity, loaded 1,000 real rows per source, built the three staging views, and verified the dimensional marts in Step 7.
 
 ### 9. Why not use ACCOUNTADMIN for the pipeline?
 
