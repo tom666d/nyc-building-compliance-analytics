@@ -43,8 +43,14 @@ Airflow schedules ingestion + dbt; GitHub Actions validates every change.
 10. Check source recency: `make dbt-freshness`.
 11. Generate lineage and documentation: `make dbt-docs`.
 12. Enforce physical documentation coverage: `make dbt-docs-check`.
+13. Install the isolated local Airflow runtime: `make airflow-install`.
+14. Validate the Dag structure without external writes: `make airflow-check`.
+15. Execute a bounded live integration run: `make airflow-test-dag`.
+16. Start the local Airflow interface when needed: `make airflow-standalone`.
 
-The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. Production runs use the same code with date watermarks and pagination.
+The ingestion CLI and Airflow Dag default to bounded samples so a reviewer can run them
+cheaply. Pagination is implemented; validated incremental date watermarks and late-arriving
+record handling remain explicit production follow-up work.
 
 ## Phase 1 deliverables
 
@@ -59,6 +65,7 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Step 7：建立事實表、維度表與每日快照](docs/learning/step-07-dimensional-models.md)
 - [Step 8：建立資料品質測試與可觀測性](docs/learning/step-08-data-quality.md)
 - [Step 9：建立文件與資料血緣](docs/learning/step-09-documentation-and-lineage.md)
+- [Step 10：使用 Apache Airflow 自動執行資料管線](docs/learning/step-10-airflow-orchestration.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Point-in-time source profile](docs/source_profile.md)
@@ -70,6 +77,7 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Fact grains and dimensional model](docs/data_model.md)
 - [Data quality contracts and evidence](docs/data_quality.md)
 - [Documentation, exposures, and end-to-end lineage](docs/lineage.md)
+- [Airflow orchestration, retry safety, and verified evidence](docs/orchestration.md)
 - [Architecture decision records](docs/decisions/)
 - Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton
 
@@ -81,4 +89,12 @@ Decisions are recorded before implementation in `docs/decisions`. Suggested mile
 
 Phase 1 models DOB NOW approved permits, DOB complaints, and legacy BIS DOB violations. DOB NOW Safety Violations is deliberately deferred until a cross-system deduplication rule is profiled and validated. This limitation is visible rather than hidden.
 
-The Snowflake foundation, key-pair service authentication, a bounded 3,000-row real-data load, three staging views, one conformed building dimension, three event facts, an incremental daily snapshot, and four quality audit views were verified in a real trial account on 2026-09-20. The full build executed 114 data tests with zero warnings and zero errors, and all three source freshness checks passed. The generated catalog also verified descriptions for all 118 published mart columns and all 15 physical source columns; relation and column descriptions were persisted to Snowflake for every published mart.
+The Snowflake foundation, key-pair service authentication, bounded real-data ingestion,
+three staging views, one conformed building dimension, three event facts, an incremental
+daily snapshot, and four quality audit views were verified in a real trial account on
+2026-09-20. A complete nine-task Airflow run then ingested 1,000 records from each source,
+passed all three freshness checks, and completed 115 data tests with zero warnings and zero
+errors. The generated catalog also verified descriptions for all 118 published mart columns
+and all 15 physical source columns; relation and column descriptions were persisted to
+Snowflake for every published mart. Airflow remains paused by default, and the current
+bounded extraction is not presented as a full production incremental strategy.

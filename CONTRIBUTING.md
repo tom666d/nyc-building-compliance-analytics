@@ -8,8 +8,15 @@ Use feature branches and small commits whose messages explain intent. A credible
 4. `test: add keys, relationships, and business-rule assertions`
 5. `docs: document published models and downstream lineage`
 6. `test: enforce documentation coverage against the catalog`
-7. `ci: validate Python and dbt changes`
+7. `feat: orchestrate the verified analytics pipeline`
+8. `docs: explain Airflow orchestration decisions`
+9. `ci: validate Python, dbt, and Airflow changes`
 
 For every material modeling choice, add or update an ADR. Pull requests should include the business question, grain impact, test evidence, and any coverage change.
 
-Do not commit `.env`, Snowflake credentials, raw exports, `target/`, or dbt logs.
+For orchestration changes, include the Dag structural check and state whether a live
+integration run was performed. Do not imply that a local SQLite Airflow deployment or a
+bounded source slice is production infrastructure.
+
+Do not commit `.env`, Snowflake credentials, raw exports, `target/`, dbt logs,
+`.airflow-venv/`, or `.airflow/` runtime state.

@@ -26,6 +26,7 @@ This guide explains the responsibility of each tracked area. Generated outputs, 
     ├── data_model.md                 # Fact grains and dimensional design
     ├── data_quality.md               # Quality contracts, audits, and evidence
     ├── lineage.md                    # Documentation coverage and end-to-end lineage
+    ├── orchestration.md              # Airflow workflow, safety controls, and evidence
     ├── decisions/                    # Architecture Decision Records
     └── learning/                     # Traditional Chinese learning notes
 ```
@@ -49,7 +50,7 @@ The Python package owns extraction from NYC Open Data and loading into the Snowf
 - `socrata.py`: paginated HTTP requests to the source API.
 - `snowflake.py`: workload-specific connection settings and credential validation.
 - `snowflake_check.py`: read-only role and object smoke checks.
-- `snowflake_loader.py`: raw payload hashing and Snowflake inserts.
+- `snowflake_loader.py`: raw payload hashing and retry-safe batched Snowflake merges.
 - `cli.py`: the command-line entry point that connects the components.
 
 Keeping application code under `src/` prevents accidental imports from the repository root and makes packaging behavior more realistic.
@@ -94,11 +95,17 @@ intelligence product and the operational quality monitor.
 Repository-level checks that do not belong to the ingestion package live here.
 `check_dbt_documentation.py` compares generated dbt artifacts with the physical Snowflake
 catalog and fails on undocumented or stale published columns, incomplete sources, and
-placeholder exposure metadata.
+placeholder exposure metadata. `check_airflow_dag.py` imports the Dag without external
+writes and enforces its tasks, dependencies, schedule, retry, timeout, concurrency, and
+cost-safety contract.
 
 ### `airflow/dags`
 
-The Apache Airflow Directed Acyclic Graph defines the intended task order: ingest source data, check freshness, then build and test the dbt project. Orchestration code coordinates existing tasks; it should not duplicate transformation logic.
+The Apache Airflow Dag validates Snowflake access, ingests three official sources, checks
+freshness, builds and tests dbt, generates the catalog, and enforces documentation coverage.
+Orchestration code coordinates existing commands; it does not duplicate transformation
+logic. Every ingestion task receives the stable Airflow run identifier, and the loader
+merges on the payload hash plus that load identifier so same-run retries are idempotent.
 
 ### `.github/workflows`
 
@@ -110,6 +117,7 @@ GitHub Actions runs repeatable checks for proposed changes. Static validation ca
 - `docs/learning` is written in Traditional Chinese for step-by-step study.
 - Architecture Decision Records preserve important assumptions, evidence, decisions, and consequences.
 - `lineage.md` records the downstream exposures, documentation contract, and verified coverage.
+- `orchestration.md` records task dependencies, runtime controls, retry safety, live run evidence, and production limitations.
 
 ## Local and generated paths
 
@@ -119,6 +127,8 @@ These paths may exist locally but must not be committed:
 |---|---|---|
 | `.env` | Real credentials and local settings | Contains secrets |
 | `.venv/` | Installed Python environment | Recreated from `pyproject.toml` |
+| `.airflow-venv/` | Isolated constrained Airflow environment | Recreated by `make airflow-install` |
+| `.airflow/` | Local Airflow configuration, metadata database, and logs | Environment-specific runtime state |
 | `build/`, `*.egg-info/` | Python packaging output | Recreated during installation |
 | `work/` | Downloaded samples and scratch analysis | Mutable and potentially large |
 | `outputs/` | Local user-facing generated artifacts | Not source code |
