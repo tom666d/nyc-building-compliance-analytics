@@ -1,8 +1,13 @@
-.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs dbt-docs-check
+.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs dbt-docs-check airflow-install airflow-check airflow-init airflow-test-dag airflow-standalone
+
+AIRFLOW_VERSION := 3.3.2
+AIRFLOW_PYTHON_VERSION := $(shell python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+AIRFLOW_CONSTRAINT_URL := https://raw.githubusercontent.com/apache/airflow/constraints-$(AIRFLOW_VERSION)/constraints-$(AIRFLOW_PYTHON_VERSION).txt
+AIRFLOW_ENV := AIRFLOW_HOME=$(CURDIR)/.airflow AIRFLOW__CORE__DAGS_FOLDER=$(CURDIR)/airflow/dags AIRFLOW__CORE__LOAD_EXAMPLES=False NYC_DOB_PROJECT_ROOT=$(CURDIR)
 
 install:
 	python3 -m venv .venv
-	.venv/bin/pip install '.[dev]'
+	.venv/bin/pip install --editable '.[dev]'
 
 test:
 	.venv/bin/pytest
@@ -43,3 +48,24 @@ dbt-docs:
 
 dbt-docs-check: dbt-docs
 	.venv/bin/python scripts/check_dbt_documentation.py
+
+.airflow-venv/.installed: pyproject.toml Makefile
+	python3 -m venv .airflow-venv
+	.airflow-venv/bin/pip install "apache-airflow==$(AIRFLOW_VERSION)" "apache-airflow-providers-standard>=1.10,<2" --constraint "$(AIRFLOW_CONSTRAINT_URL)"
+	.airflow-venv/bin/pip check
+	touch .airflow-venv/.installed
+
+airflow-install: .airflow-venv/.installed
+
+airflow-check: airflow-install
+	$(AIRFLOW_ENV) .airflow-venv/bin/python scripts/check_airflow_dag.py
+
+airflow-init: airflow-install
+	mkdir -p .airflow
+	$(AIRFLOW_ENV) .airflow-venv/bin/airflow db migrate
+
+airflow-test-dag: airflow-init
+	.venv/bin/dotenv run -- env $(AIRFLOW_ENV) .airflow-venv/bin/airflow dags test nyc_dob_daily 2026-09-20 --dagfile-path $(CURDIR)/airflow/dags/nyc_dob_pipeline.py
+
+airflow-standalone: airflow-install
+	.venv/bin/dotenv run -- env $(AIRFLOW_ENV) .airflow-venv/bin/airflow standalone

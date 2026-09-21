@@ -8,7 +8,7 @@ from nyc_dob_ingestion.snowflake import (
     SnowflakeConfigurationError,
     connection_parameters_from_env,
 )
-from nyc_dob_ingestion.snowflake_loader import canonical_json, row_hash
+from nyc_dob_ingestion.snowflake_loader import canonical_json, load_rows, row_hash
 from nyc_dob_ingestion.socrata import SocrataClient
 
 
@@ -34,6 +34,32 @@ class FakeSession:
         return FakeResponse(next(self.payloads))
 
 
+class RecordingCursor:
+    def __init__(self, rowcount):
+        self.rowcount = rowcount
+        self.dynamic_rowcount = rowcount is None
+        self.calls = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return None
+
+    def execute(self, sql, parameters):
+        self.calls.append((sql, parameters))
+        if self.dynamic_rowcount:
+            self.rowcount = len(parameters) // 5
+
+
+class FakeConnection:
+    def __init__(self, rowcount):
+        self.recording_cursor = RecordingCursor(rowcount)
+
+    def cursor(self):
+        return self.recording_cursor
+
+
 def test_dataset_ids_are_unique():
     assert len({item.dataset_id for item in DATASETS.values()}) == len(DATASETS)
 
@@ -47,6 +73,63 @@ def test_row_hash_is_stable_across_key_order():
 
 def test_changed_payload_changes_hash():
     assert row_hash({"status": "OPEN"}) != row_hash({"status": "CLOSED"})
+
+
+def test_load_rows_uses_stable_run_id_and_deduplicates_page_payloads():
+    connection = FakeConnection(rowcount=1)
+    duplicate_payload = {"bin": "1000001", "status": "ACTIVE"}
+
+    inserted = load_rows(
+        connection,
+        "RAW_DOB_COMPLAINTS",
+        "eabe-havv",
+        [duplicate_payload, duplicate_payload],
+        load_id="scheduled__2026-09-20",
+    )
+
+    cursor = connection.recording_cursor
+    assert inserted == 1
+    assert len(cursor.calls) == 1
+    sql, parameters = cursor.calls[0]
+    assert "merge into RAW_DOB_COMPLAINTS" in sql
+    assert "target.source_row_hash = incoming.source_row_hash" in sql
+    assert "target.load_id = incoming.load_id" in sql
+    assert "from values" in sql
+    assert len(parameters) == 5
+    assert parameters[3] == "scheduled__2026-09-20"
+
+
+def test_load_rows_does_not_query_snowflake_for_an_empty_page():
+    connection = FakeConnection(rowcount=0)
+
+    inserted = load_rows(
+        connection,
+        "RAW_DOB_COMPLAINTS",
+        "eabe-havv",
+        [],
+        load_id="scheduled__2026-09-20",
+    )
+
+    assert inserted == 0
+    assert connection.recording_cursor.calls == []
+
+
+def test_load_rows_merges_large_pages_in_bounded_batches():
+    connection = FakeConnection(rowcount=None)
+
+    inserted = load_rows(
+        connection,
+        "RAW_DOB_COMPLAINTS",
+        "eabe-havv",
+        [{"id": index} for index in range(251)],
+        load_id="scheduled__2026-09-20",
+    )
+
+    calls = connection.recording_cursor.calls
+    assert inserted == 251
+    assert len(calls) == 2
+    assert len(calls[0][1]) == 250 * 5
+    assert len(calls[1][1]) == 1 * 5
 
 
 def test_socrata_pages_respect_limit_and_use_stable_order():

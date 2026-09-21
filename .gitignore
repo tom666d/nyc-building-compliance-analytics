@@ -3,6 +3,8 @@
 *.p8
 *.pem
 .venv/
+.airflow-venv/
+.airflow/
 __pycache__/
 *.pyc
 *.egg-info/
@@ -14,7 +16,6 @@ dbt/**/target/
 dbt/**/logs/
 dbt/**/dbt_packages/
 dbt/**/.user.yml
-airflow/logs/
 work/
 outputs/
 *.csv
