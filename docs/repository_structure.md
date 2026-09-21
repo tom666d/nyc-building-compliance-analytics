@@ -23,6 +23,7 @@ This guide explains the responsibility of each tracked area. Generated outputs, 
     ├── data_sources.md               # Official source inventory and limitations
     ├── source_profile.md              # Point-in-time profiling evidence
     ├── data_model.md                 # Fact grains and dimensional design
+    ├── data_quality.md               # Quality contracts, audits, and evidence
     ├── decisions/                    # Architecture Decision Records
     └── learning/                     # Traditional Chinese learning notes
 ```
@@ -71,12 +72,14 @@ sources -> staging -> intermediate -> marts -> BI exposure
 - `models/intermediate`: reusable transformations that are not final user products.
 - `models/marts/core`: conformed dimensions and event facts.
 - `models/marts/operations`: decision-oriented building-level outputs.
+- `models/marts/quality`: queryable quality scorecards and exception details.
 - `macros`: reusable SQL-generating logic.
+- `tests`: cross-model singular data tests that return contract violations.
 - schema YAML files: descriptions, tests, relationships, and exposures.
 - `packages.yml` and `package-lock.yml`: declared and resolved dbt dependencies.
 - `profiles.yml`: connection settings read from environment variables.
 
-The current dbt files are a scaffold. Source profiling has already identified permit-grain and status-mapping logic that must be revised before the first warehouse build.
+The staging, dimensional, snapshot, and quality models have been built against the real bounded Snowflake sample. Permit grain remains explicitly source-record based until a business-level issuance key is validated.
 
 ### `airflow/dags`
 
@@ -116,6 +119,7 @@ Official NYC Open Data
   -> dbt staging               standardizes source-specific fields
   -> dbt intermediate          creates reusable transformation logic
   -> dbt marts                 publishes tested analytical facts and dimensions
+  -> dbt quality               exposes health metrics and record-level exceptions
   -> BI consumption            answers stakeholder questions
 
 tests/                         validates isolated Python behavior

@@ -23,8 +23,8 @@ Python ingestion -> Snowflake RAW (JSON + ingestion metadata)
         |
         v
 dbt staging -> conformed intermediate models -> dimensional marts
-        |                                      |
-        +-> tests, docs, lineage                +-> BI semantic layer
+        |                         |             |
+        +-> tests, docs, lineage  +-> quality   +-> BI semantic layer
 
 Airflow schedules ingestion + dbt; GitHub Actions validates every change.
 ```
@@ -40,7 +40,8 @@ Airflow schedules ingestion + dbt; GitHub Actions validates every change.
 7. Validate role access without changing data: `make snowflake-check`.
 8. Load a small real-data slice: `make ingest-sample`.
 9. Build and test: `make dbt-build`.
-10. Generate lineage and documentation: `make dbt-docs`.
+10. Check source recency: `make dbt-freshness`.
+11. Generate lineage and documentation: `make dbt-docs`.
 
 The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. Production runs use the same code with date watermarks and pagination.
 
@@ -55,6 +56,7 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Step 5.5：安全連線與第一次 Snowflake 真實資料載入](docs/learning/step-05-5-secure-connection-and-first-load.md)
 - [Step 6：使用 dbt 建立 staging models](docs/learning/step-06-dbt-staging-models.md)
 - [Step 7：建立事實表、維度表與每日快照](docs/learning/step-07-dimensional-models.md)
+- [Step 8：建立資料品質測試與可觀測性](docs/learning/step-08-data-quality.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Point-in-time source profile](docs/source_profile.md)
@@ -64,6 +66,7 @@ The ingestion CLI defaults to bounded samples so a reviewer can run it cheaply. 
 - [Verified Snowflake deployment evidence](docs/snowflake_deployment_evidence.md)
 - [dbt staging model design and evidence](docs/staging_models.md)
 - [Fact grains and dimensional model](docs/data_model.md)
+- [Data quality contracts and evidence](docs/data_quality.md)
 - [Architecture decision records](docs/decisions/)
 - Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton
 
@@ -75,4 +78,4 @@ Decisions are recorded before implementation in `docs/decisions`. Suggested mile
 
 Phase 1 models DOB NOW approved permits, DOB complaints, and legacy BIS DOB violations. DOB NOW Safety Violations is deliberately deferred until a cross-system deduplication rule is profiled and validated. This limitation is visible rather than hidden.
 
-The Snowflake foundation, key-pair service authentication, a bounded 3,000-row real-data load, three staging views, one conformed building dimension, three event facts, and an incremental daily snapshot were verified in a real trial account on 2026-09-20. The dimensional build completed with zero warnings and zero errors; the same-day snapshot rerun also preserved its compound grain.
+The Snowflake foundation, key-pair service authentication, a bounded 3,000-row real-data load, three staging views, one conformed building dimension, three event facts, an incremental daily snapshot, and four quality audit views were verified in a real trial account on 2026-09-20. The full build executed 114 data tests with zero warnings and zero errors, and all three source freshness checks passed.
