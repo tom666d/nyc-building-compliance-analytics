@@ -15,6 +15,7 @@ This guide explains the responsibility of each tracked area. Generated outputs, 
 ├── .github/workflows/ci.yml          # Automated validation on GitHub
 ├── src/nyc_dob_ingestion/            # Python source extraction and loading package
 ├── tests/                             # Automated Python tests
+├── scripts/                           # Repository-level validation commands
 ├── infrastructure/snowflake/         # Snowflake object and permission setup
 ├── dbt/nyc_building_compliance/      # SQL transformations, tests, docs, and lineage
 ├── airflow/dags/                      # Scheduled workflow definition
@@ -24,6 +25,7 @@ This guide explains the responsibility of each tracked area. Generated outputs, 
     ├── source_profile.md              # Point-in-time profiling evidence
     ├── data_model.md                 # Fact grains and dimensional design
     ├── data_quality.md               # Quality contracts, audits, and evidence
+    ├── lineage.md                    # Documentation coverage and end-to-end lineage
     ├── decisions/                    # Architecture Decision Records
     └── learning/                     # Traditional Chinese learning notes
 ```
@@ -78,8 +80,21 @@ sources -> staging -> intermediate -> marts -> BI exposure
 - schema YAML files: descriptions, tests, relationships, and exposures.
 - `packages.yml` and `package-lock.yml`: declared and resolved dbt dependencies.
 - `profiles.yml`: connection settings read from environment variables.
+- `models/_docs.md`: custom documentation overview and reusable business definitions.
 
 The staging, dimensional, snapshot, and quality models have been built against the real bounded Snowflake sample. Permit grain remains explicitly source-record based until a business-level issuance key is validated.
+
+Published models and sources are documented against both dbt's parsed manifest and the
+physical Snowflake catalog. Model and column descriptions are persisted to supported
+Snowflake relations, while two exposures connect the graph to the planned business
+intelligence product and the operational quality monitor.
+
+### `scripts`
+
+Repository-level checks that do not belong to the ingestion package live here.
+`check_dbt_documentation.py` compares generated dbt artifacts with the physical Snowflake
+catalog and fails on undocumented or stale published columns, incomplete sources, and
+placeholder exposure metadata.
 
 ### `airflow/dags`
 
@@ -94,6 +109,7 @@ GitHub Actions runs repeatable checks for proposed changes. Static validation ca
 - Business and architecture documents are written in English for the portfolio audience.
 - `docs/learning` is written in Traditional Chinese for step-by-step study.
 - Architecture Decision Records preserve important assumptions, evidence, decisions, and consequences.
+- `lineage.md` records the downstream exposures, documentation contract, and verified coverage.
 
 ## Local and generated paths
 

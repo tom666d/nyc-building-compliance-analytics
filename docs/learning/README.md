@@ -13,7 +13,7 @@
 7. ✅ [Step 6：使用 dbt 建立 staging models](step-06-dbt-staging-models.md)
 8. ✅ [Step 7：建立事實表、維度表與每日快照](step-07-dimensional-models.md)
 9. ✅ [Step 8：建立資料品質測試與可觀測性](step-08-data-quality.md)
-10. Step 9：建立文件與資料血緣
+10. ✅ [Step 9：建立文件與資料血緣](step-09-documentation-and-lineage.md)
 11. Step 10：使用 Apache Airflow 自動執行
 12. Step 11：建立 GitHub 持續整合
 13. Step 12：建立商業智慧消費層與面試展示
