@@ -12,7 +12,10 @@ This guide explains the responsibility of each tracked area. Generated outputs, 
 ├── pyproject.toml                    # Python package, dependencies, and tool settings
 ├── .env.example                      # Environment-variable names without secrets
 ├── .gitignore                        # Local/generated paths Git must not track
-├── .github/workflows/ci.yml          # Automated validation on GitHub
+├── .github/
+│   ├── workflows/ci.yml              # Credential-free change validation
+│   ├── workflows/snowflake-integration.yml # Protected live dbt validation
+│   └── dependabot.yml                # Weekly dependency update proposals
 ├── src/nyc_dob_ingestion/            # Python source extraction and loading package
 ├── tests/                             # Automated Python tests
 ├── scripts/                           # Repository-level validation commands
@@ -97,7 +100,9 @@ Repository-level checks that do not belong to the ingestion package live here.
 catalog and fails on undocumented or stale published columns, incomplete sources, and
 placeholder exposure metadata. `check_airflow_dag.py` imports the Dag without external
 writes and enforces its tasks, dependencies, schedule, retry, timeout, concurrency, and
-cost-safety contract.
+cost-safety contract. `check_ci_workflows.py` parses GitHub workflow YAML and rejects weakened
+token permissions, mutable external Actions, unsafe triggers, static secret access, missing
+timeouts, and missing live-integration controls.
 
 ### `airflow/dags`
 
@@ -109,7 +114,12 @@ merges on the payload hash plus that load identifier so same-run retries are ide
 
 ### `.github/workflows`
 
-GitHub Actions runs repeatable checks for proposed changes. Static validation can run without Snowflake; the integration job requires protected credentials.
+GitHub Actions runs repeatable checks for proposed changes. `ci.yml` uses no secrets and checks
+Python, dbt parsing, Airflow structure, dependencies, and its own workflow policy.
+`snowflake-integration.yml` is a separate manual workflow behind a named environment, explicit
+cost confirmation, key-pair secrets, timeout, and serialized execution. It builds dbt against
+the development Snowflake target but intentionally does not ingest source data. Dependabot
+proposes weekly GitHub Actions and Python dependency updates for review.
 
 ### `docs`
 
@@ -118,6 +128,7 @@ GitHub Actions runs repeatable checks for proposed changes. Static validation ca
 - Architecture Decision Records preserve important assumptions, evidence, decisions, and consequences.
 - `lineage.md` records the downstream exposures, documentation contract, and verified coverage.
 - `orchestration.md` records task dependencies, runtime controls, retry safety, live run evidence, and production limitations.
+- `continuous_integration.md` records the trust boundary between static checks and live warehouse access, activation steps, and verified local evidence.
 
 ## Local and generated paths
 
@@ -163,3 +174,5 @@ docs/                          explains business meaning and design evidence
 4. Reusable business transformations belong in dbt, not Airflow.
 5. Material design choices require an Architecture Decision Record.
 6. A commit should represent one understandable change and include relevant validation.
+7. Pull-request validation must not receive Snowflake credentials.
+8. Hosted and live-integration evidence must not be claimed until the corresponding run exists.

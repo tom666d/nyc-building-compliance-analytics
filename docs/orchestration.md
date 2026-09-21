@@ -103,7 +103,7 @@ make airflow-standalone  # Start the local scheduler, API server, and web interf
 
 `make airflow-test-dag` changes Snowflake data and uses live NYC Open Data. It is an
 integration test, not a static check. `make airflow-check` is the inexpensive default for
-local development and future continuous integration.
+local development and the credential-free GitHub workflow.
 
 ## Verified evidence
 

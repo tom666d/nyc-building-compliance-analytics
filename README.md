@@ -47,6 +47,7 @@ Airflow schedules ingestion + dbt; GitHub Actions validates every change.
 14. Validate the Dag structure without external writes: `make airflow-check`.
 15. Execute a bounded live integration run: `make airflow-test-dag`.
 16. Start the local Airflow interface when needed: `make airflow-standalone`.
+17. Run the complete credential-free CI equivalent locally: `make ci-local`.
 
 The ingestion CLI and Airflow Dag default to bounded samples so a reviewer can run them
 cheaply. Pagination is implemented; validated incremental date watermarks and late-arriving
@@ -66,6 +67,7 @@ record handling remain explicit production follow-up work.
 - [Step 8：建立資料品質測試與可觀測性](docs/learning/step-08-data-quality.md)
 - [Step 9：建立文件與資料血緣](docs/learning/step-09-documentation-and-lineage.md)
 - [Step 10：使用 Apache Airflow 自動執行資料管線](docs/learning/step-10-airflow-orchestration.md)
+- [Step 11：使用 GitHub Actions 建立持續整合](docs/learning/step-11-github-continuous-integration.md)
 - [Business brief](docs/business_brief.md)
 - [Official source inventory and limitations](docs/data_sources.md)
 - [Point-in-time source profile](docs/source_profile.md)
@@ -78,6 +80,7 @@ record handling remain explicit production follow-up work.
 - [Data quality contracts and evidence](docs/data_quality.md)
 - [Documentation, exposures, and end-to-end lineage](docs/lineage.md)
 - [Airflow orchestration, retry safety, and verified evidence](docs/orchestration.md)
+- [Continuous integration boundaries and local evidence](docs/continuous_integration.md)
 - [Architecture decision records](docs/decisions/)
 - Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton
 
@@ -97,4 +100,7 @@ passed all three freshness checks, and completed 115 data tests with zero warnin
 errors. The generated catalog also verified descriptions for all 118 published mart columns
 and all 15 physical source columns; relation and column descriptions were persisted to
 Snowflake for every published mart. Airflow remains paused by default, and the current
-bounded extraction is not presented as a full production incremental strategy.
+bounded extraction is not presented as a full production incremental strategy. Credential-free
+continuous integration now validates Python, dbt parsing, the nine-task Airflow contract, and
+workflow security policy; its full local equivalent passed with 25 Python tests on 2026-09-21.
+The repository has no GitHub remote yet, so no hosted run or branch-protection claim is made.
