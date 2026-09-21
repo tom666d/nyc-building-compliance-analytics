@@ -1,48 +1,66 @@
-name: ci
+name: CI
 
 on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DBT_SEND_ANONYMOUS_USAGE_STATS: "false"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  SNOWFLAKE_ACCOUNT: static-validation
+  SNOWFLAKE_USER: static-validation
+  SNOWFLAKE_PASSWORD: not-a-real-secret
 
 jobs:
-  python-and-dbt-static-validation:
-    runs-on: ubuntu-latest
+  static-validation:
+    name: Python, dbt, and Airflow contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install '.[dev]'
-      - run: ruff check src tests airflow
-      - run: pytest
-      - name: Resolve dbt packages
-        working-directory: dbt/nyc_building_compliance
-        run: dbt deps
-      - name: Parse dbt graph
-        working-directory: dbt/nyc_building_compliance
-        env:
-          SNOWFLAKE_ACCOUNT: placeholder
-          SNOWFLAKE_USER: placeholder
-          SNOWFLAKE_PASSWORD: placeholder
-        run: dbt parse --profiles-dir .
+          cache-dependency-path: pyproject.toml
 
-  snowflake-integration:
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-    runs-on: ubuntu-latest
-    environment: snowflake-ci
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install '.[dev]'
-      - working-directory: dbt/nyc_building_compliance
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_DBT_ROLE: NYC_DOB_TRANSFORMER
-          SNOWFLAKE_SCHEMA: "CI_${{ github.event.pull_request.number }}"
-        run: dbt deps && dbt build --profiles-dir .
+      - name: Install project dependencies
+        run: make install
+
+      - name: Validate workflow security contract
+        run: make ci-workflow-check
+
+      - name: Lint Python
+        run: make lint
+
+      - name: Run unit tests
+        run: make test
+
+      - name: Check Python dependency consistency
+        run: .venv/bin/pip check
+
+      - name: Resolve dbt packages
+        run: make dbt-deps
+
+      - name: Parse dbt graph without a warehouse connection
+        run: make dbt-parse
+
+      - name: Validate Airflow Dag structure
+        run: |
+          make airflow-check
+          .airflow-venv/bin/pip check

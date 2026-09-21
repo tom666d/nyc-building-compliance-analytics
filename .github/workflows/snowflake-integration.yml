@@ -1,0 +1,87 @@
+name: Snowflake integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_cost:
+        description: Confirm this run may use Snowflake credits
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: snowflake-integration
+  cancel-in-progress: false
+
+env:
+  DBT_SEND_ANONYMOUS_USAGE_STATS: "false"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  dbt-snowflake-integration:
+    name: Protected dbt build against Snowflake
+    if: ${{ inputs.confirm_cost }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: snowflake-integration
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}
+      SNOWFLAKE_DBT_ROLE: NYC_DOB_TRANSFORMER
+      SNOWFLAKE_WAREHOUSE: NYC_DOB_WH
+      SNOWFLAKE_DATABASE: NYC_DOB_ANALYTICS
+      SNOWFLAKE_SCHEMA: DEV
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Verify required secrets are present
+        env:
+          SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
+        run: |
+          test -n "$SNOWFLAKE_ACCOUNT"
+          test -n "$SNOWFLAKE_USER"
+          test -n "$SNOWFLAKE_PRIVATE_KEY_B64"
+          test -n "$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE"
+
+      - name: Materialize temporary Snowflake private key
+        env:
+          SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
+        run: |
+          key_path="$RUNNER_TEMP/snowflake_key.p8"
+          echo "SNOWFLAKE_PRIVATE_KEY_PATH=$key_path" >> "$GITHUB_ENV"
+          umask 077
+          printf '%s' "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 --decode > "$key_path"
+
+      - name: Install project dependencies
+        run: make install
+
+      - name: Resolve dbt packages
+        run: make dbt-deps
+
+      - name: Verify transformer access
+        run: .venv/bin/nyc-dob-snowflake-check transformer
+
+      - name: Build and test dbt project
+        run: make dbt-build
+
+      - name: Generate and validate documentation
+        run: make dbt-docs-check
+
+      - name: Remove temporary private key
+        if: ${{ always() }}
+        run: rm -f "$SNOWFLAKE_PRIVATE_KEY_PATH"

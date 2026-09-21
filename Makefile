@@ -1,4 +1,4 @@
-.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs dbt-docs-check airflow-install airflow-check airflow-init airflow-test-dag airflow-standalone
+.PHONY: install test lint ci-workflow-check ci-local extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs dbt-docs-check airflow-install airflow-check airflow-init airflow-test-dag airflow-standalone
 
 AIRFLOW_VERSION := 3.3.2
 AIRFLOW_PYTHON_VERSION := $(shell python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
@@ -14,6 +14,13 @@ test:
 
 lint:
 	.venv/bin/ruff check src tests airflow scripts
+
+ci-workflow-check:
+	.venv/bin/python scripts/check_ci_workflows.py
+
+ci-local: lint test ci-workflow-check dbt-deps dbt-parse airflow-check
+	.airflow-venv/bin/pip check
+	.venv/bin/pip check
 
 extract-samples:
 	.venv/bin/nyc-dob-extract permits --limit 25
