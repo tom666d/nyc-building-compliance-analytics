@@ -85,6 +85,8 @@ def audit_workflows(workflow_directory: Path) -> list[str]:
         "make dbt-deps",
         "make dbt-parse",
         "make airflow-check",
+        "make dashboard-install",
+        "make dashboard-check",
         ".airflow-venv/bin/pip check",
     }
     for command in sorted(required_ci_commands):

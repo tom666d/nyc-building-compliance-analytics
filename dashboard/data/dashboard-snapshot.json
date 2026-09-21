@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "exportedOn": "2026-09-21",
+    "snapshotDate": "2026-09-20",
+    "scope": "Bounded portfolio sample: 1,000 source records from each of three official NYC Open Data datasets. Results are not citywide population estimates.",
+    "normalizationNote": "One all-zero placeholder BIN discovered during dashboard validation was excluded from the consumption snapshot. The warehouse rebuild is pending the Snowflake resource-monitor reset.",
+    "sourceRecords": {
+      "permits": 1000,
+      "complaints": 1000,
+      "violations": 1000
+    },
+    "buildEvidence": {
+      "modelsBuilt": 3,
+      "checksPassed": 21,
+      "warnings": 0,
+      "errors": 0
+    }
+  },
+  "overview": {
+    "observedBuildingCount": 2382,
+    "buildingWithOpenItemCount": 25,
+    "priorityBuildingCount": 2,
+    "openComplaintCount": 12,
+    "openViolationCount": 15,
+    "activePermitRecordCount": 1,
+    "totalOpenComplianceItemCount": 27,
+    "highestAttentionScore": 22,
+    "medianComplaintResolutionDays12m": 11,
+    "resolvedComplaintCount12m": 48
+  },
+  "attentionTiers": [
+    { "tier": "CRITICAL", "buildingCount": 0 },
+    { "tier": "HIGH", "buildingCount": 2 },
+    { "tier": "MODERATE", "buildingCount": 18 },
+    { "tier": "LOW", "buildingCount": 2362 }
+  ],
+  "boroughs": [
+    {
+      "borough": "MANHATTAN",
+      "observedBuildingCount": 1004,
+      "buildingWithOpenItemCount": 14,
+      "priorityBuildingCount": 2,
+      "priorityBuildingRatePct": 0.2,
+      "openComplaintCount": 1,
+      "openViolationCount": 15,
+      "activePermitRecordCount": 1,
+      "totalOpenComplianceItemCount": 16,
+      "highestAttentionScore": 22
+    },
+    {
+      "borough": "BROOKLYN",
+      "observedBuildingCount": 576,
+      "buildingWithOpenItemCount": 3,
+      "priorityBuildingCount": 0,
+      "priorityBuildingRatePct": 0,
+      "openComplaintCount": 3,
+      "openViolationCount": 0,
+      "activePermitRecordCount": 0,
+      "totalOpenComplianceItemCount": 3,
+      "highestAttentionScore": 14
+    },
+    {
+      "borough": "QUEENS",
+      "observedBuildingCount": 495,
+      "buildingWithOpenItemCount": 5,
+      "priorityBuildingCount": 0,
+      "priorityBuildingRatePct": 0,
+      "openComplaintCount": 5,
+      "openViolationCount": 0,
+      "activePermitRecordCount": 0,
+      "totalOpenComplianceItemCount": 5,
+      "highestAttentionScore": 14
+    },
+    {
+      "borough": "BRONX",
+      "observedBuildingCount": 195,
+      "buildingWithOpenItemCount": 2,
+      "priorityBuildingCount": 0,
+      "priorityBuildingRatePct": 0,
+      "openComplaintCount": 2,
+      "openViolationCount": 0,
+      "activePermitRecordCount": 0,
+      "totalOpenComplianceItemCount": 2,
+      "highestAttentionScore": 8
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "observedBuildingCount": 112,
+      "buildingWithOpenItemCount": 1,
+      "priorityBuildingCount": 0,
+      "priorityBuildingRatePct": 0,
+      "openComplaintCount": 1,
+      "openViolationCount": 0,
+      "activePermitRecordCount": 0,
+      "totalOpenComplianceItemCount": 1,
+      "highestAttentionScore": 14
+    }
+  ],
+  "priorityBuildings": [
+    { "bin": "1001018", "borough": "MANHATTAN", "displayAddress": "40 WALL ST", "openComplaintCount": 0, "openViolationCount": 2, "totalOpenComplianceItemCount": 2, "oldestOpenItemAgeDays": 13941, "attentionScore": 22, "attentionTier": "HIGH" },
+    { "bin": "1002736", "borough": "MANHATTAN", "displayAddress": "7 LAIGHT STREET", "openComplaintCount": 0, "openViolationCount": 2, "totalOpenComplianceItemCount": 2, "oldestOpenItemAgeDays": 14034, "attentionScore": 22, "attentionTier": "HIGH" },
+    { "bin": "1001620", "borough": "MANHATTAN", "displayAddress": "143 WEST BROADWAY", "openComplaintCount": 0, "openViolationCount": 1, "totalOpenComplianceItemCount": 1, "oldestOpenItemAgeDays": 13837, "attentionScore": 16, "attentionTier": "MODERATE" },
+    { "bin": "1000006", "borough": "MANHATTAN", "displayAddress": "117 BROAD ST", "openComplaintCount": 0, "openViolationCount": 1, "totalOpenComplianceItemCount": 1, "oldestOpenItemAgeDays": 13949, "attentionScore": 16, "attentionTier": "MODERATE" },
+    { "bin": "1001451", "borough": "MANHATTAN", "displayAddress": "27 WARREN ST", "openComplaintCount": 0, "openViolationCount": 1, "totalOpenComplianceItemCount": 1, "oldestOpenItemAgeDays": 13803, "attentionScore": 16, "attentionTier": "MODERATE" },
+    { "bin": "1001536", "borough": "MANHATTAN", "displayAddress": "29 HARRISON STREET", "openComplaintCount": 0, "openViolationCount": 1, "totalOpenComplianceItemCount": 1, "oldestOpenItemAgeDays": 13999, "attentionScore": 16, "attentionTier": "MODERATE" },
+    { "bin": "1001026", "borough": "MANHATTAN", "displayAddress": "108 BROADWAY", "openComplaintCount": 0, "openViolationCount": 1, "totalOpenComplianceItemCount": 1, "oldestOpenItemAgeDays": 13813, "attentionScore": 16, "attentionTier": "MODERATE" },
+    { "bin": "1001442", "borough": "MANHATTAN", "displayAddress": "55 WARREN STREET", "openComplaintCount": 0, "openViolationCount": 1, "totalOpenComplianceItemCount": 1, "oldestOpenItemAgeDays": 13997, "attentionScore": 16, "attentionTier": "MODERATE" },
+    { "bin": "1001216", "borough": "MANHATTAN", "displayAddress": "17 JOHN ST", "openComplaintCount": 0, "openViolationCount": 1, "totalOpenComplianceItemCount": 1, "oldestOpenItemAgeDays": 13946, "attentionScore": 16, "attentionTier": "MODERATE" }
+  ],
+  "quality": [
+    { "domain": "complaints", "totalRecordCount": 1000, "buildingKeyCoveragePct": 100, "qualityStatus": "PASS" },
+    { "domain": "permit_records", "totalRecordCount": 1000, "buildingKeyCoveragePct": 100, "qualityStatus": "PASS" },
+    { "domain": "violations", "totalRecordCount": 1000, "buildingKeyCoveragePct": 99.8, "qualityStatus": "WARN" }
+  ]
+}

@@ -1,9 +1,10 @@
-.PHONY: install test lint ci-workflow-check ci-local extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs dbt-docs-check airflow-install airflow-check airflow-init airflow-test-dag airflow-standalone
+.PHONY: install test lint ci-workflow-check ci-local extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs dbt-docs-check dashboard-export dashboard-install dashboard-check dashboard-dev airflow-install airflow-check airflow-init airflow-test-dag airflow-standalone
 
 AIRFLOW_VERSION := 3.3.2
 AIRFLOW_PYTHON_VERSION := $(shell python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 AIRFLOW_CONSTRAINT_URL := https://raw.githubusercontent.com/apache/airflow/constraints-$(AIRFLOW_VERSION)/constraints-$(AIRFLOW_PYTHON_VERSION).txt
 AIRFLOW_ENV := AIRFLOW_HOME=$(CURDIR)/.airflow AIRFLOW__CORE__DAGS_FOLDER=$(CURDIR)/airflow/dags AIRFLOW__CORE__LOAD_EXAMPLES=False NYC_DOB_PROJECT_ROOT=$(CURDIR)
+DASHBOARD_NPM_CACHE := $(CURDIR)/.npm-cache
 
 install:
 	python3 -m venv .venv
@@ -18,7 +19,7 @@ lint:
 ci-workflow-check:
 	.venv/bin/python scripts/check_ci_workflows.py
 
-ci-local: lint test ci-workflow-check dbt-deps dbt-parse airflow-check
+ci-local: lint test ci-workflow-check dbt-deps dbt-parse airflow-check dashboard-install dashboard-check
 	.airflow-venv/bin/pip check
 	.venv/bin/pip check
 
@@ -55,6 +56,20 @@ dbt-docs:
 
 dbt-docs-check: dbt-docs
 	.venv/bin/python scripts/check_dbt_documentation.py
+
+dashboard-export:
+	PYTHONPATH=src .venv/bin/dotenv run -- .venv/bin/python scripts/export_dashboard_data.py
+
+dashboard-install:
+	cd dashboard && NPM_CONFIG_CACHE=$(DASHBOARD_NPM_CACHE) npm ci
+
+dashboard-check:
+	cd dashboard && NPM_CONFIG_CACHE=$(DASHBOARD_NPM_CACHE) npm audit --omit=dev
+	cd dashboard && NPM_CONFIG_CACHE=$(DASHBOARD_NPM_CACHE) npm test
+	cd dashboard && NPM_CONFIG_CACHE=$(DASHBOARD_NPM_CACHE) npm run build
+
+dashboard-dev:
+	cd dashboard && NPM_CONFIG_CACHE=$(DASHBOARD_NPM_CACHE) npm run dev
 
 .airflow-venv/.installed: pyproject.toml Makefile
 	python3 -m venv .airflow-venv
