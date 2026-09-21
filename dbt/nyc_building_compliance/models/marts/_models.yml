@@ -8,10 +8,10 @@ models:
       current descriptive attributes; historical attribute changes are not retained.
     columns:
       - name: building_key
-        description: Stable warehouse surrogate key generated from BIN.
+        description: "{{ doc('building_key') }}"
         data_tests: [not_null, unique]
       - name: bin
-        description: Seven-digit NYC Building Identification Number and business key.
+        description: "{{ doc('bin') }}"
         data_tests:
           - not_null
           - unique
@@ -19,23 +19,31 @@ models:
               arguments:
                 expression: "regexp '^[0-9]{7}$'"
       - name: bbl
-        description: Validated ten-digit Borough-Block-Lot identifier when observed.
+        description: Validated ten-digit Borough-Block-Lot property identifier when observed.
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
                 expression: "regexp '^[0-9]{10}$'"
       - name: borough
-        description: Canonical NYC borough name.
+        description: Canonical uppercase NYC borough name associated with the selected observation.
         data_tests:
           - accepted_values:
               arguments:
                 values: ['MANHATTAN', 'BRONX', 'BROOKLYN', 'QUEENS', 'STATEN ISLAND']
+      - name: house_number
+        description: Street number from the selected source observation, trimmed but otherwise unchanged.
+      - name: street_name
+        description: Uppercase street name from the selected source observation.
+      - name: display_address
+        description: Convenience label formed from house number and street name; not a geocoded address.
       - name: selected_attribute_source
         description: Source selected to provide the dimension's current descriptive values.
         data_tests:
           - accepted_values:
               arguments:
                 values: ['permit', 'complaint', 'violation']
+      - name: source_last_observed_at
+        description: Most recent ingestion timestamp for any retained observation of this Building Identification Number.
       - name: observed_source_count
         description: Number of the three Phase 1 source systems in which this BIN was observed.
         data_tests:
@@ -57,7 +65,7 @@ models:
         description: Content-based technical key inherited from the staging source-row hash.
         data_tests: [not_null, unique]
       - name: building_key
-        description: Nullable foreign key to the conformed building dimension.
+        description: "{{ doc('building_key') }}"
         data_tests:
           - relationships:
               arguments:
@@ -67,7 +75,19 @@ models:
               arguments:
                 minimum_proportion: 0.99
       - name: bin
-        description: Source BIN retained so unmatched records remain diagnosable.
+        description: "{{ doc('bin') }}"
+      - name: job_filing_number
+        description: DOB NOW job filing identifier associated with the approved permit source record.
+      - name: tracking_number
+        description: Source tracking number for the permit record; it is not treated as a validated unique key.
+      - name: work_permit
+        description: Work permit identifier supplied by DOB NOW.
+      - name: sequence_number
+        description: Source sequence value that distinguishes filings or permit-record versions.
+      - name: work_type
+        description: Source code describing the category of permitted work.
+      - name: permit_status
+        description: Uppercase source status retained without analytical reinterpretation.
       - name: permit_status_group
         description: Governed analytical grouping of the source permit status.
         data_tests:
@@ -79,8 +99,30 @@ models:
         description: True when the source record is in the PERMIT ISSUED state.
         data_tests: [not_null]
       - name: is_status_unmapped
-        description: True when the source status is not in the current governed mapping.
+        description: "{{ doc('is_status_unmapped') }}"
         data_tests: [not_null]
+      - name: approved_date
+        description: Calendar date on which the filing was approved, parsed from the source timestamp.
+      - name: issued_date
+        description: Calendar date on which this permit source record was issued.
+      - name: expired_date
+        description: Source permit expiration date when available.
+      - name: approval_to_issue_days
+        description: Number of calendar days from approval to issuance; null when either date is unavailable.
+      - name: approval_to_issue_date_anomaly
+        description: True when issued_date is earlier than approved_date and the lifecycle order is invalid.
+      - name: estimated_job_cost
+        description: Source estimated job cost parsed as a decimal; it is not inflation-adjusted or independently verified.
+      - name: job_description
+        description: Free-text description of the permitted work supplied by the source.
+      - name: source_dataset_id
+        description: "{{ doc('source_dataset_id') }}"
+      - name: source_row_hash
+        description: "{{ doc('source_row_hash') }}"
+      - name: source_load_id
+        description: "{{ doc('source_load_id') }}"
+      - name: ingested_at
+        description: "{{ doc('ingested_at') }}"
 
   - name: fct_complaints
     description: One row per DOB complaint, using the latest ingested source state.
@@ -93,7 +135,7 @@ models:
         description: Complaint number used as the source business key.
         data_tests: [not_null, unique]
       - name: building_key
-        description: Nullable foreign key to the conformed building dimension.
+        description: "{{ doc('building_key') }}"
         data_tests:
           - relationships:
               arguments:
@@ -102,6 +144,14 @@ models:
           - not_null_proportion_at_least:
               arguments:
                 minimum_proportion: 0.99
+      - name: bin
+        description: "{{ doc('bin') }}"
+      - name: complaint_number
+        description: Public complaint number supplied by the Department of Buildings.
+      - name: complaint_category
+        description: Source category code describing the subject of the complaint.
+      - name: complaint_status
+        description: Uppercase current complaint status from the latest ingested source record.
       - name: complaint_status_group
         description: Governed analytical grouping of ACTIVE, CLOSED, and unexpected statuses.
         data_tests:
@@ -113,8 +163,28 @@ models:
         description: True only when complaint_status_group is ACTIVE.
         data_tests: [not_null]
       - name: is_status_unmapped
-        description: True when the source status is not in the current governed mapping.
+        description: "{{ doc('is_status_unmapped') }}"
         data_tests: [not_null]
+      - name: date_entered
+        description: Calendar date on which the complaint entered the source system.
+      - name: inspection_date
+        description: Source inspection date associated with the complaint when available.
+      - name: disposition_date
+        description: Source date of a complaint disposition action; it does not alone define closure.
+      - name: disposition_code
+        description: Source code describing the recorded complaint disposition action.
+      - name: resolution_days
+        description: Calendar days from date_entered to disposition_date; null when either date is unavailable.
+      - name: resolution_date_anomaly
+        description: True when disposition_date is earlier than date_entered and the lifecycle order is invalid.
+      - name: source_dataset_id
+        description: "{{ doc('source_dataset_id') }}"
+      - name: source_row_hash
+        description: "{{ doc('source_row_hash') }}"
+      - name: source_load_id
+        description: "{{ doc('source_load_id') }}"
+      - name: ingested_at
+        description: "{{ doc('ingested_at') }}"
 
   - name: fct_violations
     description: One row per latest legacy Building Information System DOB violation record.
@@ -124,10 +194,10 @@ models:
             compare_model: ref('stg_dob_violations')
     columns:
       - name: violation_key
-        description: Source ISN DOB BIS violation identifier.
+        description: Source ISN DOB BIS violation identifier used as the fact key.
         data_tests: [not_null, unique]
       - name: building_key
-        description: Nullable foreign key to the conformed building dimension.
+        description: "{{ doc('building_key') }}"
         data_tests:
           - relationships:
               arguments:
@@ -136,6 +206,16 @@ models:
           - not_null_proportion_at_least:
               arguments:
                 minimum_proportion: 0.99
+      - name: bin
+        description: "{{ doc('bin') }}"
+      - name: source_violation_id
+        description: Legacy Building Information System internal violation identifier retained from the source.
+      - name: violation_number
+        description: Public-facing violation number supplied by the source when available.
+      - name: violation_type_code
+        description: Source code identifying the violation type.
+      - name: violation_category
+        description: Source category text used as the authoritative input to the analytical status mapping.
       - name: violation_status_group
         description: Governed category mapping used instead of inferring status from disposition date.
         data_tests:
@@ -147,8 +227,28 @@ models:
         description: True only when violation_status_group is ACTIVE.
         data_tests: [not_null]
       - name: is_status_unmapped
-        description: True for source categories without an explicit active/resolved/dismissed label.
+        description: "{{ doc('is_status_unmapped') }}"
         data_tests: [not_null]
+      - name: violation_description
+        description: Free-text description of the violation supplied by the source.
+      - name: source_issue_date
+        description: Original issue-date string retained exactly for traceability and parse-failure diagnosis.
+      - name: issue_date
+        description: Parsed calendar issue date when source_issue_date is a valid YYYYMMDD value.
+      - name: issue_date_parse_failed
+        description: True when a non-null source issue date cannot be parsed under the documented YYYYMMDD rule.
+      - name: disposition_date
+        description: Parsed calendar date of the recorded violation disposition action when available.
+      - name: disposition_comments
+        description: Free-text source comments describing the violation disposition.
+      - name: source_dataset_id
+        description: "{{ doc('source_dataset_id') }}"
+      - name: source_row_hash
+        description: "{{ doc('source_row_hash') }}"
+      - name: source_load_id
+        description: "{{ doc('source_load_id') }}"
+      - name: ingested_at
+        description: "{{ doc('ingested_at') }}"
 
   - name: fct_building_compliance_daily
     description: >-
@@ -163,7 +263,7 @@ models:
         description: Snowflake calendar date on which the snapshot was built.
         data_tests: [not_null]
       - name: building_key
-        description: Foreign key to the conformed building dimension.
+        description: "{{ doc('building_key') }}"
         data_tests:
           - not_null
           - relationships:
@@ -171,11 +271,13 @@ models:
                 to: ref('dim_buildings')
                 field: building_key
       - name: open_complaint_count
+        description: Count of complaint records mapped to ACTIVE for the building as of the build.
         data_tests:
           - not_null
           - dbt_utils.expression_is_true:
               arguments: {expression: '>= 0'}
       - name: open_violation_count
+        description: Count of violation records mapped to ACTIVE for the building as of the build.
         data_tests:
           - not_null
           - dbt_utils.expression_is_true:
@@ -187,14 +289,30 @@ models:
           - not_null
           - dbt_utils.expression_is_true:
               arguments: {expression: '>= 0'}
+      - name: oldest_open_complaint_date
+        description: Earliest date_entered among the building's complaint records currently mapped to ACTIVE.
+      - name: oldest_open_violation_date
+        description: Earliest parsed issue_date among the building's violation records currently mapped to ACTIVE.
+      - name: latest_permit_issued_date
+        description: Most recent issued_date across the building's retained permit source records.
       - name: complaints_last_30_days
+        description: Count of complaints entered from snapshot_date minus 30 days through the build date.
         data_tests:
           - not_null
           - dbt_utils.expression_is_true:
               arguments: {expression: '>= 0'}
       - name: unmapped_complaint_status_count
+        description: Count of the building's complaint records with an ungoverned source status.
         data_tests: [not_null]
       - name: unmapped_violation_status_count
+        description: Count of the building's violation records with an ungoverned source category.
         data_tests: [not_null]
       - name: unmapped_permit_status_count
+        description: Count of the building's permit records with an ungoverned source status.
         data_tests: [not_null]
+      - name: has_complaint_history
+        description: True when at least one retained complaint record maps to the building.
+      - name: has_violation_history
+        description: True when at least one retained violation record maps to the building.
+      - name: has_permit_history
+        description: True when at least one retained permit source record maps to the building.

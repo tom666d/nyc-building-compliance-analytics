@@ -1,4 +1,4 @@
-.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs
+.PHONY: install test lint extract-samples snowflake-check ingest-sample dbt-debug dbt-deps dbt-parse dbt-build dbt-freshness dbt-docs dbt-docs-check
 
 install:
 	python3 -m venv .venv
@@ -8,7 +8,7 @@ test:
 	.venv/bin/pytest
 
 lint:
-	.venv/bin/ruff check src tests airflow
+	.venv/bin/ruff check src tests airflow scripts
 
 extract-samples:
 	.venv/bin/nyc-dob-extract permits --limit 25
@@ -40,3 +40,6 @@ dbt-freshness:
 
 dbt-docs:
 	.venv/bin/dotenv run -- .venv/bin/dbt docs generate --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+
+dbt-docs-check: dbt-docs
+	.venv/bin/python scripts/check_dbt_documentation.py

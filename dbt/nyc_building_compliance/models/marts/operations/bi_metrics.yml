@@ -4,13 +4,27 @@ exposures:
   - name: building_compliance_360
     type: dashboard
     maturity: low
-    url: https://example.invalid/replace-with-bi-url
-    description: Planned executive and operations view of building compliance workload.
+    description: >-
+      Planned business intelligence dashboard for prioritizing building-level compliance
+      workload and drilling from daily metrics into permit, complaint, and violation records.
     depends_on:
       - ref('fct_building_compliance_daily')
       - ref('fct_complaints')
       - ref('fct_violations')
       - ref('fct_permit_records')
     owner:
-      name: Portfolio Owner
-      email: replace-me@example.com
+      name: Tom Hsieh
+
+  - name: data_quality_monitoring
+    type: dashboard
+    maturity: medium
+    description: >-
+      Operational scorecard and record-level investigation views for source freshness,
+      building-key coverage, lifecycle-date anomalies, and unmapped source statuses.
+    depends_on:
+      - ref('audit_data_quality_summary')
+      - ref('audit_unresolved_building_records')
+      - ref('audit_date_anomalies')
+      - ref('audit_status_mapping_exceptions')
+    owner:
+      name: Tom Hsieh

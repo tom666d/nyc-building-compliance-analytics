@@ -2,6 +2,10 @@ version: 2
 
 sources:
   - name: dob_raw
+    description: >-
+      Immutable landing tables loaded from official NYC Open Data APIs. Each row retains
+      the full source payload plus ingestion metadata so downstream transformations remain
+      reproducible and auditable.
     database: "{{ env_var('SNOWFLAKE_DATABASE', 'NYC_DOB_ANALYTICS') }}"
     schema: raw
     config:
@@ -12,28 +16,52 @@ sources:
     tables:
       - name: permits
         identifier: raw_dob_now_permits
+        description: Raw DOB NOW approved permit source records from NYC Open Data dataset rbx6-tga4.
         columns:
+          - name: raw_payload
+            description: Complete source record stored as a semi-structured Snowflake VARIANT value.
           - name: source_row_hash
+            description: SHA-256 fingerprint of the canonical source payload used for exact deduplication.
             data_tests: [not_null]
+          - name: source_dataset_id
+            description: NYC Open Data dataset identifier recorded by the ingestion process.
           - name: load_id
+            description: Identifier shared by every row written during one ingestion execution.
             data_tests: [not_null]
           - name: ingested_at
+            description: Timestamp when the ingestion process wrote the source record to Snowflake.
             data_tests: [not_null]
       - name: complaints
         identifier: raw_dob_complaints
+        description: Raw DOB complaint source records from NYC Open Data dataset eabe-havv.
         columns:
+          - name: raw_payload
+            description: Complete source record stored as a semi-structured Snowflake VARIANT value.
           - name: source_row_hash
+            description: SHA-256 fingerprint of the canonical source payload used for exact deduplication.
             data_tests: [not_null]
+          - name: source_dataset_id
+            description: NYC Open Data dataset identifier recorded by the ingestion process.
           - name: load_id
+            description: Identifier shared by every row written during one ingestion execution.
             data_tests: [not_null]
           - name: ingested_at
+            description: Timestamp when the ingestion process wrote the source record to Snowflake.
             data_tests: [not_null]
       - name: violations
         identifier: raw_dob_violations
+        description: Raw legacy BIS DOB violation source records from NYC Open Data dataset 3h2n-5cm9.
         columns:
+          - name: raw_payload
+            description: Complete source record stored as a semi-structured Snowflake VARIANT value.
           - name: source_row_hash
+            description: SHA-256 fingerprint of the canonical source payload used for exact deduplication.
             data_tests: [not_null]
+          - name: source_dataset_id
+            description: NYC Open Data dataset identifier recorded by the ingestion process.
           - name: load_id
+            description: Identifier shared by every row written during one ingestion execution.
             data_tests: [not_null]
           - name: ingested_at
+            description: Timestamp when the ingestion process wrote the source record to Snowflake.
             data_tests: [not_null]

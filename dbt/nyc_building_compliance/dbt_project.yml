@@ -12,6 +12,9 @@ vars:
 
 models:
   nyc_building_compliance:
+    +persist_docs:
+      relation: true
+      columns: true
     staging:
       +materialized: view
       +schema: staging

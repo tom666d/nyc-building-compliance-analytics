@@ -7,8 +7,10 @@ models:
       status mapping, date validity, and source freshness without removing source records.
     columns:
       - name: measured_at
+        description: Snowflake timestamp at which the scorecard query measured the current state.
         data_tests: [not_null]
       - name: domain
+        description: "{{ doc('audit_domain') }}"
         data_tests:
           - not_null
           - unique
@@ -16,23 +18,42 @@ models:
               arguments:
                 values: ['permit_records', 'complaints', 'violations']
       - name: total_record_count
+        description: Total number of retained records in the domain fact table.
         data_tests:
           - not_null
           - dbt_utils.expression_is_true:
               arguments: {expression: '> 0'}
+      - name: matched_building_key_count
+        description: Number of fact records that resolve to the conformed building dimension.
+      - name: missing_building_key_count
+        description: Number of fact records that cannot resolve to the conformed building dimension.
       - name: building_key_coverage_pct
+        description: Percentage of domain fact records with a non-null conformed building key.
         data_tests:
           - not_null
           - dbt_utils.expression_is_true:
               arguments: {expression: 'between 0 and 100'}
+      - name: unmapped_status_count
+        description: Count of domain fact records whose source status lacks a governed analytical mapping.
+      - name: date_anomaly_count
+        description: Count of domain fact records that violate a documented date parsing or lifecycle rule.
+      - name: issue_indicator_count
+        description: >-
+          Sum of missing building keys, unmapped statuses, and date anomalies. Indicators may
+          overlap and are intended for monitoring, not as a count of distinct bad records.
       - name: source_last_ingested_at
+        description: Most recent raw ingestion timestamp observed for the domain source table.
         data_tests: [not_null]
       - name: source_age_hours
+        description: Whole hours between source_last_ingested_at and scorecard measurement time.
         data_tests:
           - not_null
           - dbt_utils.expression_is_true:
               arguments: {expression: '>= 0'}
+      - name: minimum_building_key_coverage_pct
+        description: Configured minimum building-key coverage percentage required by the quality policy.
       - name: quality_status
+        description: Governed PASS, WARN, or ERROR result after applying coverage, freshness, status, and date rules.
         data_tests:
           - not_null
           - accepted_values:
@@ -47,19 +68,30 @@ models:
             combination_of_columns: [domain, record_key]
     columns:
       - name: domain
+        description: "{{ doc('audit_domain') }}"
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['permit_records', 'complaints', 'violations']
       - name: record_key
+        description: "{{ doc('audit_record_key') }}"
         data_tests: [not_null]
+      - name: source_bin
+        description: Normalized source Building Identification Number, null when missing or invalid.
+      - name: event_status_group
+        description: Governed analytical status group retained to support exception prioritization.
       - name: quality_issue
+        description: Reason the record could not be assigned to a conformed building.
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['MISSING_OR_INVALID_BIN', 'UNMATCHED_VALID_BIN']
+      - name: source_dataset_id
+        description: "{{ doc('source_dataset_id') }}"
+      - name: ingested_at
+        description: "{{ doc('ingested_at') }}"
 
   - name: audit_date_anomalies
     description: Source records with reversed lifecycle dates or an explicitly failed date parse.
@@ -69,14 +101,17 @@ models:
             combination_of_columns: [domain, record_key, quality_issue]
     columns:
       - name: domain
+        description: "{{ doc('audit_domain') }}"
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['permit_records', 'complaints', 'violations']
       - name: record_key
+        description: "{{ doc('audit_record_key') }}"
         data_tests: [not_null]
       - name: quality_issue
+        description: Governed code identifying the failed date parsing or lifecycle-order rule.
         data_tests:
           - not_null
           - accepted_values:
@@ -85,6 +120,12 @@ models:
                   - ISSUED_BEFORE_APPROVED
                   - DISPOSITION_BEFORE_ENTERED
                   - ISSUE_DATE_PARSE_FAILED
+      - name: source_value
+        description: Human-readable source date value or date pair that triggered the exception.
+      - name: source_dataset_id
+        description: "{{ doc('source_dataset_id') }}"
+      - name: ingested_at
+        description: "{{ doc('ingested_at') }}"
 
   - name: audit_status_mapping_exceptions
     description: Source statuses that have not been assigned to a governed analytical status group.
@@ -94,12 +135,19 @@ models:
             combination_of_columns: [domain, record_key]
     columns:
       - name: domain
+        description: "{{ doc('audit_domain') }}"
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['permit_records', 'complaints', 'violations']
       - name: record_key
+        description: "{{ doc('audit_record_key') }}"
         data_tests: [not_null]
       - name: source_status
+        description: Original normalized source status or category that lacks a governed mapping.
         data_tests: [not_null]
+      - name: source_dataset_id
+        description: "{{ doc('source_dataset_id') }}"
+      - name: ingested_at
+        description: "{{ doc('ingested_at') }}"
