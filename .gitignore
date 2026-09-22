@@ -19,5 +19,6 @@ dbt/**/dbt_packages/
 dbt/**/.user.yml
 work/
 outputs/
+docs/learning/
 *.csv
 !.github/**/*.csv

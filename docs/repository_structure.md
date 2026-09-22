@@ -33,8 +33,7 @@ This guide explains the responsibility of each tracked area. Generated outputs, 
     ├── orchestration.md              # Airflow workflow, safety controls, and evidence
     ├── continuous_integration.md     # Static and protected CI boundaries
     ├── bi_consumption.md             # Dashboard metrics, evidence, and limitations
-    ├── decisions/                    # Architecture Decision Records
-    └── learning/                     # Traditional Chinese learning notes
+    └── decisions/                    # Architecture Decision Records
 ```
 
 ## Responsibility by area
@@ -97,7 +96,7 @@ Snowflake relations, while two exposures connect the graph to the planned busine
 intelligence product and the operational quality monitor.
 
 Three operations marts form the governed dashboard contract: one building per row, one borough
-per row, and one portfolio overview row for the latest snapshot. Scoring and metric definitions
+per row, and one platform overview row for the latest snapshot. Scoring and metric definitions
 stay in dbt rather than being duplicated in the website.
 
 ### `scripts`
@@ -132,7 +131,7 @@ proposes weekly GitHub Actions and Python dependency updates for review.
 
 ### `dashboard`
 
-The dashboard is the portfolio's shareable consumption layer. It imports a bounded, validated
+The dashboard is the platform's shareable consumption layer. It imports a bounded, validated
 JSON snapshot at build time, so no Snowflake credential reaches the browser and viewing the site
 does not resume a warehouse. The application contains overview, building explorer, and data-quality
 views. Its validator enforces cross-view totals, allowed statuses, usable Building Identification
@@ -140,8 +139,7 @@ Numbers, and open-item arithmetic before the optimized build is accepted.
 
 ### `docs`
 
-- Business and architecture documents are written in English for the portfolio audience.
-- `docs/learning` is written in Traditional Chinese for step-by-step study.
+- Business and architecture documents are written in English for product consumers and contributors.
 - Architecture Decision Records preserve important assumptions, evidence, decisions, and consequences.
 - `lineage.md` records the downstream exposures, documentation contract, and verified coverage.
 - `orchestration.md` records task dependencies, runtime controls, retry safety, live run evidence, and production limitations.

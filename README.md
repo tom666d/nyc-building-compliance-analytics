@@ -198,12 +198,3 @@ docs/                         Product, architecture, runbooks, and decision reco
 
 See the [business brief](docs/business_brief.md), [official source inventory](docs/data_sources.md),
 and [dimensional model](docs/data_model.md) for the complete metric and source boundaries.
-
-<details>
-<summary>Maintainer learning notes</summary>
-
-The repository also retains a Traditional Chinese, step-by-step learning record under
-[`docs/learning`](docs/learning/README.md). These notes explain how the platform was built; they
-are not part of the published product documentation or runtime architecture.
-
-</details>
