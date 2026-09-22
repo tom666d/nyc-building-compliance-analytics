@@ -2,7 +2,7 @@
   "metadata": {
     "exportedOn": "2026-09-21",
     "snapshotDate": "2026-09-20",
-    "scope": "Bounded portfolio sample: 1,000 source records from each of three official NYC Open Data datasets. Results are not citywide population estimates.",
+    "scope": "Bounded validation sample: 1,000 source records from each of three official NYC Open Data datasets. Results are not citywide population estimates.",
     "normalizationNote": "One all-zero placeholder BIN discovered during dashboard validation was excluded from the consumption snapshot. The warehouse rebuild is pending the Snowflake resource-monitor reset.",
     "sourceRecords": {
       "permits": 1000,

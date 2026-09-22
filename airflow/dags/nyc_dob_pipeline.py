@@ -80,7 +80,7 @@ with DAG(
     max_active_runs=1,
     dagrun_timeout=timedelta(hours=2),
     default_args=DEFAULT_ARGS,
-    tags=["portfolio", "nyc-dob", "analytics-engineering"],
+    tags=["data-product", "nyc-dob", "analytics-engineering"],
 ) as dag:
     verify_loader_access = BashOperator(
         task_id="verify_loader_access",

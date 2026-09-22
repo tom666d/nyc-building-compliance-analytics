@@ -1,6 +1,6 @@
 # Business intelligence consumption layer
 
-Building Compliance 360 is the final consumption layer for the portfolio project. It turns
+Building Compliance 360 is the final consumption layer for the analytics platform. It turns
 governed dbt marts into a decision-oriented interface without placing Snowflake credentials in
 the browser or requiring a warehouse to run for every page view.
 
@@ -96,7 +96,7 @@ consistent and explainable.
 - source-domain quality status.
 
 The website imports that file at build time. Snowflake credentials are never bundled into client
-code, and a page view does not resume a warehouse. This makes the portfolio demonstration cheap,
+code, and a page view does not resume a warehouse. This makes the published product cheap,
 repeatable, and safe to share. It also means the deployed view is as current as its last explicit
 export rather than a live operational dashboard.
 
@@ -134,9 +134,8 @@ quality statuses, unique and usable Building Identification Numbers, and open-it
 
 The validated dashboard is deployed at
 [NYC Building Compliance 360](https://nyc-building-compliance-360-portfolio.hsieh203.chatgpt.site).
-It is owner-private by default, so the deployment proves the production artifact exists without
-making an unfinished portfolio item public. Recruiter access requires a later explicit audience
-change.
+It is access-controlled by default. The application artifact, data release, and audience setting
+are managed independently, so public access can be enabled without exposing warehouse credentials.
 
 ## Real-data evidence
 

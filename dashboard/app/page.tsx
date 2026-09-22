@@ -14,7 +14,7 @@ const viewCopy: Record<View, { eyebrow: string; title: string; description: stri
   buildings: {
     eyebrow: 'Building-level investigation',
     title: 'Priority building explorer',
-    description: 'Move from portfolio metrics to the buildings that need review first.',
+    description: 'Move from governed metrics to the buildings that need review first.',
   },
   quality: {
     eyebrow: 'Trust and release readiness',
@@ -251,7 +251,7 @@ export default function Home() {
             <div className="refresh-status"><span /> Snapshot {snapshot.metadata.snapshotDate}</div>
           </div>
         </header>
-        <div className="scope-banner"><strong>Bounded evidence, not a citywide estimate.</strong> Each source contributes 1,000 public records so the portfolio remains reproducible and cost-controlled.</div>
+        <div className="scope-banner"><strong>Bounded evidence, not a citywide estimate.</strong> Each source contributes 1,000 public records so the release remains reproducible and cost-controlled.</div>
         {view === 'overview' && <Overview boroughFilter={borough} />}
         {view === 'buildings' && <BuildingExplorer />}
         {view === 'quality' && <DataQuality />}

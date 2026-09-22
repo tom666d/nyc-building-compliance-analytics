@@ -148,7 +148,7 @@ def export_snapshot(connection) -> dict[str, Any]:
             "exportedOn": datetime.now(UTC).date().isoformat(),
             "snapshotDate": overview["snapshotDate"],
             "scope": (
-                "Bounded portfolio sample sourced from three official NYC Open Data "
+                "Bounded validation sample sourced from three official NYC Open Data "
                 "datasets. Results are not citywide population estimates."
             ),
             "normalizationNote": (

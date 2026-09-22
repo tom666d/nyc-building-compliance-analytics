@@ -1,131 +1,209 @@
 # NYC Building Compliance & Permit Analytics Platform
 
-An analytics engineering portfolio project that turns fragmented NYC Department of Buildings (DOB) permit, complaint, and violation records into documented, tested, building-level decision products.
+[![CI](https://github.com/tom666d/nyc-building-compliance-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/tom666d/nyc-building-compliance-analytics/actions/workflows/ci.yml)
 
-## Business outcome
+A governed analytics platform that consolidates New York City permit, complaint, and violation
+records into a building-level operations view. It gives compliance teams consistent metrics,
+an explainable review queue, and traceable evidence from source API to dashboard.
 
-Operations and compliance users should be able to answer, without reconciling multiple portals:
+![NYC Building Compliance 360](dashboard/public/og.png)
 
-- Which buildings have the highest unresolved compliance workload?
-- Where are complaints or violations accumulating?
-- How long do permits and complaints take to move through their lifecycles?
-- Which definitions power each KPI, and when was the source last refreshed?
+## Business problem
 
-Owner-private live preview: [NYC Building Compliance 360](https://nyc-building-compliance-360-portfolio.hsieh203.chatgpt.site).
-The audience remains private until an explicit sharing decision is made.
+Building compliance information is distributed across separate New York City Department of
+Buildings datasets. Each source has its own identifiers, lifecycle statuses, dates, and quality
+limitations. Answering a simple question such as *"Which buildings need attention first?"*
+therefore requires manual reconciliation and leaves room for teams to calculate different answers.
 
-The governed analytical foundation is `fct_building_compliance_daily`, a daily building
-snapshot designed for business intelligence. Three consumption marts turn that foundation into
-an overview, borough comparison, and building review queue, while event-level facts remain
-available for drill-through.
+This platform creates a shared analytical layer for four recurring decisions:
+
+| User | Decision supported | Governed evidence |
+|---|---|---|
+| Compliance operations | Prioritize buildings for case review | Open complaints, open violations, item age, recent activity |
+| Property management | Identify unresolved building workload | Building-level compliance summary and source coverage |
+| Construction operations | Monitor permit lifecycle performance | Active permit records and approval-to-issue duration |
+| Analytics teams | Publish consistent reporting | Tested definitions, lineage, freshness, and quality exceptions |
+
+## Product outcome
+
+**Building Compliance 360** turns three operational sources into a single decision product:
+
+- a current building review queue with a transparent attention score;
+- borough-level workload comparison;
+- executive compliance and resolution metrics;
+- building search by address, borough, or Building Identification Number; and
+- visible source coverage, quality status, refresh date, and metric limitations.
+
+The attention score ranks review workload; it is not a structural-safety prediction or legal risk
+classification. This distinction keeps the output explainable and avoids claims the available
+public data cannot support.
 
 ## Architecture
 
 ```text
-NYC Open Data (Socrata APIs)
-        |
-        v
-Python ingestion -> Snowflake RAW (JSON + ingestion metadata)
-        |
-        v
-dbt staging -> conformed intermediate models -> dimensional marts
-        |                         |             |
-        +-> tests, docs, lineage  +-> quality   +-> consumption marts
-                                                        |
-                                                        v
-                                          validated JSON snapshot -> dashboard
+Official NYC Open Data APIs
+  permits | complaints | legacy violations
+                  |
+                  v
+        Python ingestion service
+     pagination | metadata | row hashes
+                  |
+                  v
+            Snowflake RAW
+                  |
+                  v
+       dbt staging and conformance
+                  |
+                  v
+   dimensional facts + building dimension
+                  |
+                  v
+      daily snapshot + quality audits
+                  |
+                  v
+         governed consumption marts
+                  |
+                  v
+       versioned dashboard contract
+                  |
+                  v
+       Building Compliance 360
 
-Airflow schedules ingestion + dbt; GitHub Actions validates every change.
+Apache Airflow orchestrates the warehouse path.
+GitHub Actions validates code, model contracts, orchestration, and the dashboard on every change.
 ```
 
-## Quick start
+Metric logic is owned by dbt rather than duplicated in the dashboard. The web application consumes
+a validated snapshot, so no Snowflake credential reaches the browser and page views do not resume
+a warehouse.
 
-1. Install the project: `make install`.
-2. Download bounded real-data samples without Snowflake: `make extract-samples`.
-3. Inspect the JSON Lines files and manifests under `work/samples/`.
-4. Copy `.env.example` to `.env` and enter a Snowflake service account.
-5. Create Snowflake objects with `infrastructure/snowflake/bootstrap.sql` as an administrator.
-6. Assign the three project roles using `infrastructure/snowflake/grant_roles.example.sql`.
-7. Validate role access without changing data: `make snowflake-check`.
-8. Load a small real-data slice: `make ingest-sample`.
-9. Build and test: `make dbt-build`.
-10. Check source recency: `make dbt-freshness`.
-11. Generate lineage and documentation: `make dbt-docs`.
-12. Enforce physical documentation coverage: `make dbt-docs-check`.
-13. Install the isolated local Airflow runtime: `make airflow-install`.
-14. Validate the Dag structure without external writes: `make airflow-check`.
-15. Execute a bounded live integration run: `make airflow-test-dag`.
-16. Start the local Airflow interface when needed: `make airflow-standalone`.
-17. Run the complete credential-free CI equivalent locally: `make ci-local`.
-18. Install the locked dashboard dependencies: `make dashboard-install`.
-19. Validate the dashboard data contract, production packages, lint, and build: `make dashboard-check`.
-20. Start the local dashboard: `make dashboard-dev`.
-21. When Snowflake capacity is available, refresh the snapshot: `make dashboard-export`.
+## Technology stack
 
-The ingestion CLI and Airflow Dag default to bounded samples so a reviewer can run them
-cheaply. Pagination is implemented; validated incremental date watermarks and late-arriving
-record handling remain explicit production follow-up work.
+| Layer | Technology | Implementation |
+|---|---|---|
+| Source | NYC Open Data / Socrata APIs | Deterministic pagination over three official datasets |
+| Ingestion | Python | Bounded loads, ingestion metadata, stable load IDs, row hashing, retry-safe merges |
+| Warehouse | Snowflake | Role-separated raw, transformation, and consumption access with cost controls |
+| Transformation | dbt Core | Staging, conformed dimensions, event facts, incremental snapshots, and marts |
+| Data quality | dbt tests and audit models | Keys, relationships, status mappings, date logic, freshness, and coverage |
+| Orchestration | Apache Airflow | Nine-task daily workflow with parallel ingestion, retries, and publication gates |
+| Continuous integration | GitHub Actions | Python, dbt parsing, Airflow contract, dependency, data-contract, lint, and build checks |
+| Consumption | Next.js and TypeScript | Responsive decision interface backed by a versioned JSON contract |
 
-## Phase 1 deliverables
+## Analytical model
 
-- [Beginner learning path in Traditional Chinese](docs/learning/README.md)
-- [Step 1: Define the business problem and success criteria](docs/learning/step-01-business-problem.md)
-- [Step 2: Understand NYC Open Data and raw sources](docs/learning/step-02-nyc-open-data.md)
-- [Step 3: Understand Git, repositories, and project structure](docs/learning/step-03-git-and-repository.md)
-- [Step 4: Extract the first real-data sample with Python](docs/learning/step-04-python-extraction.md)
-- [Step 5: Establish the Snowflake data warehouse foundation](docs/learning/step-05-snowflake-foundation.md)
-- [Step 5.5: Connect securely and load the first real Snowflake data](docs/learning/step-05-5-secure-connection-and-first-load.md)
-- [Step 6: Build staging models with dbt](docs/learning/step-06-dbt-staging-models.md)
-- [Step 7: Build facts, dimensions, and the daily snapshot](docs/learning/step-07-dimensional-models.md)
-- [Step 8: Add data-quality tests and observability](docs/learning/step-08-data-quality.md)
-- [Step 9: Build documentation and data lineage](docs/learning/step-09-documentation-and-lineage.md)
-- [Step 10: Orchestrate the data pipeline with Apache Airflow](docs/learning/step-10-airflow-orchestration.md)
-- [Step 11: Add continuous integration with GitHub Actions](docs/learning/step-11-github-continuous-integration.md)
-- [Step 12: Build the business intelligence consumption layer](docs/learning/step-12-bi-consumption-layer.md)
-- [Business brief](docs/business_brief.md)
-- [Official source inventory and limitations](docs/data_sources.md)
-- [Point-in-time source profile](docs/source_profile.md)
-- [Repository structure](docs/repository_structure.md)
-- [Local source extraction](docs/extraction.md)
-- [Snowflake foundation and setup](docs/snowflake_setup.md)
-- [Verified Snowflake deployment evidence](docs/snowflake_deployment_evidence.md)
-- [dbt staging model design and evidence](docs/staging_models.md)
-- [Fact grains and dimensional model](docs/data_model.md)
-- [Data quality contracts and evidence](docs/data_quality.md)
-- [Documentation, exposures, and end-to-end lineage](docs/lineage.md)
-- [Airflow orchestration, retry safety, and verified evidence](docs/orchestration.md)
-- [Continuous integration boundaries and local evidence](docs/continuous_integration.md)
-- [Business intelligence consumption layer](docs/bi_consumption.md)
-- [Architecture decision records](docs/decisions/)
-- Executable ingestion, Snowflake, dbt, Airflow, and CI skeleton
+| Model | Grain | Business purpose |
+|---|---|---|
+| `dim_buildings` | One validated Building Identification Number | Conformed building identity across sources |
+| `fct_permit_records` | One distinct approved-permit source payload | Permit activity and lifecycle analysis |
+| `fct_complaints` | One latest-state complaint | Complaint workload and resolution time |
+| `fct_violations` | One latest-state legacy violation | Unresolved violation workload |
+| `fct_building_compliance_daily` | One building per snapshot date | Historical, business-intelligence-ready foundation |
+| `mart_building_compliance_current` | One building in the latest snapshot | Search, review queue, and attention score |
+| `mart_borough_compliance_current` | One borough in the latest snapshot | Geographic workload comparison |
+| `mart_compliance_overview` | One row in the latest snapshot | Executive key performance indicators |
 
-## Portfolio development trail
+Event facts are aggregated before they meet in the daily snapshot. This prevents a many-to-many
+join across permits, complaints, and violations from multiplying business measures.
 
-Decisions are recorded before implementation in `docs/decisions`. Suggested milestone commits are documented in [CONTRIBUTING.md](CONTRIBUTING.md); small, reasoned commits are preferred over a single generated-code dump.
+## Verified engineering evidence
 
-## Current scope
+The bounded validation run uses real records from three official New York City datasets; no
+synthetic operational data is used.
 
-Phase 1 models DOB NOW approved permits, DOB complaints, and legacy BIS DOB violations. DOB NOW Safety Violations is deliberately deferred until a cross-system deduplication rule is profiled and validated. This limitation is visible rather than hidden.
+| Evidence | Verified result |
+|---|---:|
+| Source records loaded | 1,000 permits + 1,000 complaints + 1,000 violations |
+| Usable buildings in the published snapshot | 2,382 |
+| Airflow workflow | 9 tasks completed |
+| Full dbt build | 115 tests passed; 0 warnings; 0 errors |
+| Consumption release | 3 marts built; 21 selected checks passed |
+| Published metadata | 118 mart columns and 15 physical source columns documented |
+| Continuous integration | Python, dbt, Airflow, dashboard contract, dependency audit, lint, and production build |
 
-The Snowflake foundation, key-pair service authentication, bounded real-data ingestion,
-three staging views, one conformed building dimension, three event facts, an incremental
-daily snapshot, and four quality audit views were verified in a real trial account on
-2026-09-20. A complete nine-task Airflow run then ingested 1,000 records from each source,
-passed all three freshness checks, and completed 115 data tests with zero warnings and zero
-errors. The generated catalog also verified descriptions for all 118 published mart columns
-and all 15 physical source columns; relation and column descriptions were persisted to
-Snowflake for every published mart. Airflow remains paused by default, and the current
-bounded extraction is not presented as a full production incremental strategy. Credential-free
-continuous integration now validates Python, dbt parsing, the nine-task Airflow contract, and
-workflow security policy. Step 12 adds three governed consumption marts and a responsive dashboard
-whose checked-in snapshot is explicitly limited to 1,000 records from each source. The first live
-consumption build created all three marts and passed 18 selected data tests. Dashboard review then
-found and removed the source placeholder `0000000` from building identity; the corrected local
-snapshot is validated, while the corresponding Snowflake rebuild remains pending the resource
-monitor reset. The credential-free local suite now also audits production website dependencies,
-validates dashboard rollups, lints the application, and produces an optimized build.
-The project is published in the public
-[GitHub repository](https://github.com/tom666d/nyc-building-compliance-analytics). Its first
-corrected hosted [CI run](https://github.com/tom666d/nyc-building-compliance-analytics/actions/runs/35674860951)
-passed on 2026-09-21. Branch protection and the protected Snowflake integration environment are
-still separate follow-up controls and are not presented as configured.
+The checked-in dashboard snapshot is intentionally bounded and must not be interpreted as a
+citywide estimate. Detailed execution evidence is recorded in
+[orchestration](docs/orchestration.md), [data quality](docs/data_quality.md),
+[lineage](docs/lineage.md), and [business intelligence consumption](docs/bi_consumption.md).
+
+## Design decisions
+
+Architecture decisions are recorded separately from implementation so reviewers can see the
+trade-offs behind the code:
+
+- [Use Building Identification Number as the canonical building key](docs/decisions/0002-building-identity.md)
+- [Aggregate facts before creating the building snapshot](docs/decisions/0003-snapshot-not-wide-join.md)
+- [Publish explicit status groups instead of inferring lifecycle state](docs/decisions/0006-explicit-status-groups.md)
+- [Separate blocking data contracts from observable quality warnings](docs/decisions/0008-quality-severity-policy.md)
+- [Orchestrate existing retry-safe commands](docs/decisions/0010-orchestrate-existing-commands-with-retry-safe-loads.md)
+- [Publish a bounded, credential-free dashboard snapshot](docs/decisions/0012-publish-a-bounded-dashboard-snapshot.md)
+
+One concrete result of this process was the discovery of the source placeholder `0000000`. It
+matched the original seven-digit format check but is not a usable building identity. The revised
+rule requires the first digit to be a valid borough code from one through five, and the invalid
+records remain visible at event grain rather than being silently discarded.
+
+## Operating the project
+
+Run the same credential-free validation used by continuous integration:
+
+```bash
+make install
+make ci-local
+```
+
+Run the decision interface locally:
+
+```bash
+make dashboard-install
+make dashboard-check
+make dashboard-dev
+```
+
+Warehouse execution requires a configured Snowflake account and least-privilege service identity.
+The setup and runbooks are separated by operational responsibility:
+
+- [Snowflake foundation and access](docs/snowflake_setup.md)
+- [Source ingestion](docs/extraction.md)
+- [Airflow orchestration](docs/orchestration.md)
+- [Continuous integration boundaries](docs/continuous_integration.md)
+- [Dashboard contract and deployment](docs/bi_consumption.md)
+
+## Repository map
+
+```text
+src/                          Python ingestion and Snowflake loading
+infrastructure/snowflake/     Warehouse objects, roles, and cost controls
+dbt/nyc_building_compliance/  Transformations, tests, metadata, and exposures
+airflow/dags/                 Scheduled workflow
+dashboard/                    Next.js decision interface and data contract
+scripts/                      Release and validation utilities
+tests/                        Credential-free automated tests
+docs/                         Product, architecture, runbooks, and decision records
+```
+
+## Scope and limitations
+
+- The published snapshot contains 1,000 records from each source, not the full city population.
+- The daily snapshot supports history, but only one published date currently exists; no trend is
+  fabricated from a single observation.
+- Legacy violations are modeled separately from newer DOB Safety Violations until a defensible
+  cross-system deduplication rule is validated.
+- Records without a usable building identifier remain in event facts and are excluded from
+  building-level aggregates.
+- The deployed dashboard is a static consumption artifact and refreshes only after a governed
+  warehouse build and export.
+- The corrected warehouse rebuild is pending the configured monthly Snowflake resource-monitor
+  reset; the checked-in contract already excludes the discovered placeholder building.
+
+See the [business brief](docs/business_brief.md), [official source inventory](docs/data_sources.md),
+and [dimensional model](docs/data_model.md) for the complete metric and source boundaries.
+
+<details>
+<summary>Maintainer learning notes</summary>
+
+The repository also retains a Traditional Chinese, step-by-step learning record under
+[`docs/learning`](docs/learning/README.md). These notes explain how the platform was built; they
+are not part of the published product documentation or runtime architecture.
+
+</details>

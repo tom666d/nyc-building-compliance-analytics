@@ -1,8 +1,9 @@
 # NYC Building Compliance 360 dashboard
 
-This application is the shareable consumption layer for the analytics engineering project. It
-imports a validated, versioned snapshot from the Snowflake/dbt marts at build time, so no warehouse
-credential reaches the browser and viewing the site does not consume Snowflake credits.
+This application is the decision interface for the NYC Building Compliance & Permit Analytics
+Platform. It imports a validated, versioned snapshot from the Snowflake/dbt marts at build time,
+so no warehouse credential reaches the browser and viewing the site does not consume Snowflake
+credits.
 
 ## Commands
 
@@ -16,11 +17,11 @@ npm run dev             Start the local dashboard
 
 Refresh `data/dashboard-snapshot.json` from the repository root with
 `make dashboard-export` after the dbt consumption marts have completed. The checked-in snapshot is
-a bounded portfolio sample, not a citywide estimate.
+a bounded validation sample, not a citywide estimate.
 
 See `docs/bi_consumption.md` in the repository root for metric definitions, architecture, evidence,
 and limitations.
 
-The owner-private deployed preview is available at
-<https://nyc-building-compliance-360-portfolio.hsieh203.chatgpt.site>. Access remains restricted
-until the owner explicitly changes the site's audience.
+The deployed product is available at
+<https://nyc-building-compliance-360-portfolio.hsieh203.chatgpt.site>. The current deployment is
+access-controlled; its audience can be changed independently of the data and application release.
