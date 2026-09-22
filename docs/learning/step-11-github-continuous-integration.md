@@ -14,7 +14,7 @@ Step 10 已經讓 Airflow 能按順序執行資料管線，但程式碼一旦改
 6. 限制 GitHub 自動產生的 token 只能讀取 repository；
 7. 新增 Dependabot 每週提出 dependency 更新；
 8. 在本機完整模擬 CI，25 個 Python tests 全數通過；
-9. 清楚記錄：目前還沒有 GitHub remote，所以沒有假裝已經在 GitHub cloud 成功執行。
+9. 初始階段清楚記錄尚未有 GitHub remote；發布後再以真實 hosted run 更新證據。
 
 ## 先回答：現在需要再創帳號嗎？
 
@@ -28,7 +28,7 @@ Step 10 已經讓 Airflow 能按順序執行資料管線，但程式碼一旦改
 
 Snowflake 帳號已經存在，不需要再創一個。未來 GitHub 只是替我們執行檢查；真正的資料倉儲仍是現有 Snowflake account。
 
-我沒有自行發布到 GitHub，因為 repository 要公開或私人、名稱、帳號歸屬，都是會改變外部狀態的重要選擇，應由你決定。
+正式發布時，由你確認 repository 的帳號歸屬、名稱與公開權限後，才建立並推送到 GitHub。
 
 ## 為什麼需要持續整合
 
@@ -52,7 +52,9 @@ Snowflake 帳號已經存在，不需要再創一個。未來 GitHub 只是替�
 - Git 是版本控制工具，追蹤本機檔案修改與 commits。
 - GitHub 是代管 Git repositories 的線上平台，並提供 pull requests、權限與自動執行服務。
 
-本專案目前有完整的本機 Git history，但還沒有設定 GitHub remote。
+本專案已有完整的本機 Git history，並已設定 GitHub remote `origin`：
+
+<https://github.com/tom666d/nyc-building-compliance-analytics>
 
 ### Local repository、remote repository 與 remote
 
@@ -60,7 +62,7 @@ Snowflake 帳號已經存在，不需要再創一個。未來 GitHub 只是替�
 - Remote repository：放在線上服務的版本庫，例如 GitHub。
 - Remote：本機記住的遠端地址，通常命名為 `origin`。
 
-沒有 remote 不代表 Git 沒有作用；只代表 commits 尚未推送到 GitHub。
+Remote 讓本機 commits 能推送到 GitHub，並觸發 GitHub Actions。
 
 ### Continuous Integration
 
@@ -197,7 +199,7 @@ Quality gate 是必須通過才能繼續的檢查。Workflow 在 GitHub 上執�
 
 未來可在 branch protection 設定中，把 `Python, dbt, and Airflow contracts` 設成 required status check。如此一來，檢查失敗就不能合併到 `main`。
 
-目前尚未有 GitHub repository，所以這項設定還沒有實際開啟。
+目前已有 GitHub repository 與成功的 status check，但 branch protection 尚未開啟。
 
 ### Branch protection
 
@@ -451,16 +453,18 @@ Airflow dependency check         passed
 - Airflow Dag 的 9 個 tasks 與 controls 通過；
 - static workflow 沒有引用 GitHub secrets；
 - 外部 Actions 都固定到完整 SHA。
+- GitHub-hosted Linux runner 的完整 static CI 成功；
+- 失敗的首次 hosted run 能由 logs 定位並以新 commit 修正。
 
 ### 尚未驗證
 
-- GitHub-hosted runner 的實際 run；
 - GitHub branch protection 與 required check；
 - GitHub environment reviewer；
 - GitHub secrets 注入；
 - 從 GitHub runner 連接 Snowflake 的 live integration。
 
-原因是目前沒有 GitHub remote。這不是隱藏失敗，而是尚未進行的外部發布階段。
+Static CI 已具備 hosted evidence；其餘項目涉及 repository governance 或 Snowflake
+credentials，仍維持明確的後續範圍。
 
 ## 本步的設計決策
 
@@ -529,7 +533,7 @@ Architecture Decision Record 0011 記錄：
 
 ### 10. What is branch protection, and is it configured here?
 
-**Answer:** Branch protection can require pull requests, reviews, and successful status checks before merging to `main`. The workflow is ready to provide that check, but the repository currently has no GitHub remote, so I have not claimed that cloud-side protection is configured.
+**Answer:** Branch protection can require pull requests, reviews, and successful status checks before merging to `main`. The hosted workflow now passes and can provide that check, but branch protection itself is not configured yet.
 
 ### 11. How did you test the CI configuration itself?
 
@@ -584,7 +588,7 @@ Architecture Decision Record 0011 記錄：
 - [x] Dependabot 每週提出 dependency updates
 - [x] Workflow security contract 與 regression tests 完成
 - [x] 本機完整 CI simulation 通過
-- [ ] GitHub remote 與 hosted run 尚待明確發布決定
-- [ ] Branch protection 與 environment reviewer 尚待 repository 建立後設定
+- [x] Public GitHub remote 與成功 hosted CI run
+- [ ] Branch protection 與 environment reviewer 尚待設定
 
 下一步是 Step 12：建立 business intelligence consumption layer，把已測試的 models 轉成 stakeholder 可使用、也能在面試中展示的 dashboard 與 decision workflow。

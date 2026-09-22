@@ -124,4 +124,8 @@ found and removed the source placeholder `0000000` from building identity; the c
 snapshot is validated, while the corresponding Snowflake rebuild remains pending the resource
 monitor reset. The credential-free local suite now also audits production website dependencies,
 validates dashboard rollups, lints the application, and produces an optimized build.
-The repository has no GitHub remote yet, so no hosted run or branch-protection claim is made.
+The project is published in the public
+[GitHub repository](https://github.com/tom666d/nyc-building-compliance-analytics). Its first
+corrected hosted [CI run](https://github.com/tom666d/nyc-building-compliance-analytics/actions/runs/35674860951)
+passed on 2026-09-21. Branch protection and the protected Snowflake integration environment are
+still separate follow-up controls and are not presented as configured.

@@ -83,19 +83,19 @@ Base64 is an encoding, not encryption. GitHub secret storage and the protected e
 the security boundaries. During a run, the key is decoded under the runner's temporary directory
 with owner-only file permissions and deleted in an `always()` cleanup step.
 
-## GitHub setup still required
+## GitHub publication status
 
-The repository currently has no GitHub remote, so the tracked workflows have been tested locally
-but have not yet executed on GitHub infrastructure. Activating the cloud checks requires an
-explicit publishing decision:
+The project is published at
+[tom666d/nyc-building-compliance-analytics](https://github.com/tom666d/nyc-building-compliance-analytics).
+The credential-free `CI` workflow has run successfully on GitHub infrastructure. Enabling the
+separate live warehouse path still requires deliberate account-side configuration:
 
-1. create a GitHub repository and push this Git history;
-2. create an environment named `snowflake-integration`;
-3. add `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PRIVATE_KEY_B64`, and
+1. create an environment named `snowflake-integration`;
+2. add `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PRIVATE_KEY_B64`, and
    `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` as environment secrets;
-4. configure an environment reviewer when the repository plan and visibility support it;
-5. run `CI` once and make its status check required on the protected default branch; and
-6. manually run `Snowflake integration` only after selecting `confirm_cost`.
+3. configure an environment reviewer when the repository plan and visibility support it;
+4. make the successful static status check required on the protected default branch; and
+5. manually run `Snowflake integration` only after selecting `confirm_cost`.
 
 Secret values must never be committed, added to documentation, or pasted into an issue or pull
 request. The environment should use the existing least-privilege `NYC_DOB_TRANSFORMER` service
@@ -148,13 +148,18 @@ Dashboard snapshot contract         passed
 Dashboard lint and build            passed
 ```
 
-This verifies repository behavior on the local machine. It does not prove that a GitHub-hosted
-runner or the protected Snowflake workflow has run. That distinction remains explicit until a
-remote repository is created and the resulting run URL can be recorded.
+The first hosted run exposed a portability defect: `dotenv run` required a local `.env` file that
+correctly does not exist on a clean runner. The Makefile now loads `.env` only when present and
+otherwise reads the runner environment. After that correction, the GitHub-hosted
+[CI run 35674860951](https://github.com/tom666d/nyc-building-compliance-analytics/actions/runs/35674860951)
+completed successfully on 2026-09-21. This proves the credential-free workflow can install and
+validate the repository in a clean hosted Linux environment. It does not prove that the protected
+Snowflake integration workflow has run.
 
 ## Known limitations
 
-- No GitHub remote, hosted run, required status check, or environment reviewer is configured yet.
+- Branch protection, a required status check, and an environment reviewer are not configured yet.
+- The protected Snowflake integration workflow has not run from GitHub.
 - The integration workflow uses the shared development dbt target. A production team should use
   a dedicated CI role and isolated per-change schema before enabling automatic warehouse tests.
 - Key-pair secrets are long-lived compared with identity federation. Rotation is still required.
