@@ -5,6 +5,7 @@ AIRFLOW_PYTHON_VERSION := $(shell python3 -c 'import sys; print(f"{sys.version_i
 AIRFLOW_CONSTRAINT_URL := https://raw.githubusercontent.com/apache/airflow/constraints-$(AIRFLOW_VERSION)/constraints-$(AIRFLOW_PYTHON_VERSION).txt
 AIRFLOW_ENV := AIRFLOW_HOME=$(CURDIR)/.airflow AIRFLOW__CORE__DAGS_FOLDER=$(CURDIR)/airflow/dags AIRFLOW__CORE__LOAD_EXAMPLES=False NYC_DOB_PROJECT_ROOT=$(CURDIR)
 DASHBOARD_NPM_CACHE := $(CURDIR)/.npm-cache
+DOTENV_RUN := $(if $(wildcard .env),.venv/bin/dotenv run -- ,)
 
 install:
 	python3 -m venv .venv
@@ -37,22 +38,22 @@ ingest-sample:
 	.venv/bin/nyc-dob-ingest --all --limit 1000
 
 dbt-deps:
-	.venv/bin/dotenv run -- .venv/bin/dbt deps --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+	$(DOTENV_RUN).venv/bin/dbt deps --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-debug:
-	.venv/bin/dotenv run -- .venv/bin/dbt debug --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+	$(DOTENV_RUN).venv/bin/dbt debug --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-parse:
-	.venv/bin/dotenv run -- .venv/bin/dbt parse --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+	$(DOTENV_RUN).venv/bin/dbt parse --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-build:
-	.venv/bin/dotenv run -- .venv/bin/dbt build --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+	$(DOTENV_RUN).venv/bin/dbt build --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-freshness:
-	.venv/bin/dotenv run -- .venv/bin/dbt source freshness --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+	$(DOTENV_RUN).venv/bin/dbt source freshness --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-docs:
-	.venv/bin/dotenv run -- .venv/bin/dbt docs generate --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
+	$(DOTENV_RUN).venv/bin/dbt docs generate --project-dir dbt/nyc_building_compliance --profiles-dir dbt/nyc_building_compliance
 
 dbt-docs-check: dbt-docs
 	.venv/bin/python scripts/check_dbt_documentation.py
