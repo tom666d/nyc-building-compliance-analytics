@@ -6,6 +6,12 @@ A governed decision-support platform for building compliance operations. It repl
 reconciliation across permit, complaint, and violation datasets with one building-level review
 queue, consistent metric definitions, and visible data-quality evidence.
 
+**Project context:** A self-directed analytics engineering project built to apply a
+production-oriented extract-load-transform (ELT) workflow to real NYC Open Data.
+
+**Core stack:** Python · SQL · Snowflake · dbt Core · Apache Airflow · GitHub Actions · Next.js ·
+TypeScript
+
 ![Building Compliance 360 operational overview](docs/images/dashboard-overview.png)
 
 *The operations overview turns separate permit, complaint, and violation records into one
