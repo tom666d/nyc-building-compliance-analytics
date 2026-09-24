@@ -2,20 +2,58 @@
 
 [![CI](https://github.com/tom666d/nyc-building-compliance-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/tom666d/nyc-building-compliance-analytics/actions/workflows/ci.yml)
 
-A governed analytics platform that consolidates New York City permit, complaint, and violation
-records into a building-level operations view. It gives compliance teams consistent metrics,
-an explainable review queue, and traceable evidence from source API to dashboard.
+A governed decision-support platform for building compliance operations. It replaces manual
+reconciliation across permit, complaint, and violation datasets with one building-level review
+queue, consistent metric definitions, and visible data-quality evidence.
 
 ![NYC Building Compliance 360](dashboard/public/og.png)
 
-## Business problem
+## Why this product matters
 
 Building compliance information is distributed across separate New York City Department of
 Buildings datasets. Each source has its own identifiers, lifecycle statuses, dates, and quality
 limitations. Answering a simple question such as *"Which buildings need attention first?"*
 therefore requires manual reconciliation and leaves room for teams to calculate different answers.
 
-This platform creates a shared analytical layer for four recurring decisions:
+The underlying problem is not a lack of public data. It is the effort and ambiguity involved in
+turning that data into a repeatable operational decision.
+
+| Without the platform | Platform capability | Business value enabled |
+|---|---|---|
+| Search permits, complaints, and violations separately | One conformed building record across three sources | Less manual lookup and reconciliation |
+| Interpret source-specific status values for every analysis | Governed definitions for open, active, and resolved records | Consistent reporting across users |
+| Review an unranked list of records | Explainable attention score using unresolved workload, recency, and age | Repeatable case-review prioritization |
+| Discover missing identifiers only after a metric looks wrong | Visible coverage, freshness, and exception reporting | Safer decisions and faster investigation |
+| Give dashboard users direct warehouse access | Versioned, credential-free consumption contract | Lower access risk and no warehouse cost per page view |
+
+These are value hypotheses supported by a working product and real public records, not claimed
+production savings. A real deployment would measure lookup time, queue throughput, metric disputes,
+and time-to-detect data-quality failures before and after adoption.
+
+## Decision workflow
+
+The product supports a concrete four-step compliance review:
+
+1. **Scan the workload.** Compare unresolved complaints and violations across boroughs.
+2. **Prioritize cases.** Identify buildings in the HIGH or CRITICAL attention tiers.
+3. **Explain the ranking.** Review the exact unresolved-item and age components behind a score.
+4. **Validate trust.** Check source coverage, refresh date, build results, and known limitations
+   before acting on the data.
+
+### Example decision from the validated sample
+
+The current bounded release shows 27 open compliance items across 2,382 usable buildings. Manhattan
+contains 16 of those observed items, and two buildings fall into the HIGH attention tier. An
+operations user can move from that borough-level signal to the two buildings, see that each has two
+unresolved legacy violations plus the maximum age bonus, and verify the source-quality boundary
+before deciding what to review first.
+
+This example demonstrates the decision path. Because the release contains only 1,000 records from
+each source, it is not a citywide workload estimate or an official enforcement recommendation.
+
+## Users and decisions
+
+The shared analytical layer supports four recurring decisions:
 
 | User | Decision supported | Governed evidence |
 |---|---|---|
@@ -24,7 +62,7 @@ This platform creates a shared analytical layer for four recurring decisions:
 | Construction operations | Monitor permit lifecycle performance | Active permit records and approval-to-issue duration |
 | Analytics teams | Publish consistent reporting | Tested definitions, lineage, freshness, and quality exceptions |
 
-## Product outcome
+## Product capabilities
 
 **Building Compliance 360** turns three operational sources into a single decision product:
 
