@@ -6,7 +6,10 @@ A governed decision-support platform for building compliance operations. It repl
 reconciliation across permit, complaint, and violation datasets with one building-level review
 queue, consistent metric definitions, and visible data-quality evidence.
 
-![NYC Building Compliance 360](dashboard/public/og.png)
+![Building Compliance 360 operational overview](docs/images/dashboard-overview.png)
+
+*The operations overview turns separate permit, complaint, and violation records into one
+borough-level workload view and an explainable building-prioritization queue.*
 
 ## Why this product matters
 
@@ -50,6 +53,25 @@ before deciding what to review first.
 
 This example demonstrates the decision path. Because the release contains only 1,000 records from
 each source, it is not a citywide workload estimate or an official enforcement recommendation.
+
+## Product walkthrough
+
+### Explainable building investigation
+
+![Building-level workload investigation](docs/images/building-explorer.png)
+
+An operations user can search the priority queue, select a building, and see the complaint,
+violation, and age components behind its attention score. The interface explains why a building
+was prioritized instead of presenting an opaque risk ranking.
+
+### Trust before action
+
+![Source coverage and release evidence](docs/images/data-quality-monitor.png)
+
+The quality monitor keeps source coverage, dbt release results, and interpretation limits beside
+the business output. Users can see that complaint and permit records have complete building-key
+coverage, while the retained violation slice carries a visible warning rather than being silently
+treated as complete.
 
 ## Users and decisions
 

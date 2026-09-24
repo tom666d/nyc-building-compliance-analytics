@@ -33,6 +33,7 @@ This guide explains the responsibility of each tracked area. Generated outputs, 
     ├── orchestration.md              # Airflow workflow, safety controls, and evidence
     ├── continuous_integration.md     # Static and protected CI boundaries
     ├── bi_consumption.md             # Dashboard metrics, evidence, and limitations
+    ├── images/                        # Product screenshots used by the project README
     └── decisions/                    # Architecture Decision Records
 ```
 
