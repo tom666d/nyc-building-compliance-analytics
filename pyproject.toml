@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,22 +7,22 @@ name = "nyc-building-compliance"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-  "requests>=2.32,<3",
-  "snowflake-connector-python>=4.2,<5",
-  "python-dotenv>=1.0,<2",
+  "requests>=2.34.2,<3",
+  "snowflake-connector-python>=4.7.4,<5",
+  "python-dotenv>=1.2.3,<2",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=8,<9",
-  "PyYAML>=6,<7",
-  "ruff>=0.8,<1",
-  "dbt-core>=1.12,<1.13",
-  "dbt-snowflake>=1.12,<1.13",
+  "pytest>=9.1.1,<10",
+  "PyYAML>=6.0.3,<7",
+  "ruff>=0.16.8,<1",
+  "dbt-core>=1.12.5,<1.13",
+  "dbt-snowflake>=1.12.1,<1.13",
 ]
 airflow = [
   "apache-airflow==3.3.2",
-  "apache-airflow-providers-standard>=1.10,<2",
+  "apache-airflow-providers-standard>=1.19.0,<2",
 ]
 
 [project.scripts]
